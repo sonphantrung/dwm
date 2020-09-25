@@ -12,8 +12,8 @@ static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display 
 static const int showsystray        = 1;     /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const char *fonts[]          = { "JetBrainsMono Nerd Font:size=10", "Joypixels:size:10:antialias=true:autohint=true" };
-static const char dmenufont[]       = "JetBrainsMono Nerd Font:size=10";
+static const char *fonts[]          = { "scientifica:size=10", "Hack Nerd Font:size:10", "Joypixels:size:10:antialias=true:autohint=true" };
+static const char dmenufont[]       = "scientifica:size=10";
 static const char *upvol[]   = { "/usr/bin/pactl", "set-sink-volume", "0", "+5%",     NULL };
 static const char *downvol[] = { "/usr/bin/pactl", "set-sink-volume", "0", "-5%",     NULL };
 static const char *mutevol[] = { "/usr/bin/pactl", "set-sink-mute",   "0", "toggle",  NULL };
@@ -29,8 +29,7 @@ static const char *colors[][3]      = {
 };
 
 /* tagging */
-/* static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" }; */
-static const char *tags[] = { "dev", "www", "sys", "doc", "vbox", "chat", "mus", "vid", "gfx"};
+static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" }; 
 
 static const Rule rules[] = {
 	/* xprop(1):
