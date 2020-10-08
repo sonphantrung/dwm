@@ -18,13 +18,13 @@ static const char *upvol[]   = { "/usr/bin/pactl", "set-sink-volume", "0", "+5%"
 static const char *downvol[] = { "/usr/bin/pactl", "set-sink-volume", "0", "-5%",     NULL };
 static const char *mutevol[] = { "/usr/bin/pactl", "set-sink-mute",   "0", "toggle",  NULL };
 static const char col_gray1[]       = "#2E3440";
-static const char col_gray2[]       = "#444444";
+static const char col_gray2[]       = "#b30000";
 static const char col_gray3[]       = "#bbbbbb";
 static const char col_gray4[]       = "#e5e9f0";
 static const char col_cyan[]        = "#88C0D0";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
-	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
+	[SchemeNorm] = { col_gray3, col_gray1, col_gray1 },
 	[SchemeSel]  = { col_cyan, col_gray1,  col_gray2  },
 };
 
@@ -38,7 +38,7 @@ static const Rule rules[] = {
 	 */
 	/* class      instance    title       tags mask     isfloating   monitor */
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
-	{ "Firefox",  NULL,       NULL,       1 << 8,       0,           -1 },
+	{ "firefox",  NULL,       NULL,       1 << 8,       0,           -1 },
 	{ "Doom Emacs",  NULL,       NULL,       1 << 8,       0,           -1 },
 	{ "Nitrogen",  NULL,       NULL,       1 << 8,       True,           -1 },
 	{ "Firefox",     NULL,       "Firefox Preferences",        1 << 8,         True,     -1 },
