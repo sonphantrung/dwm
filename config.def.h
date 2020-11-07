@@ -94,7 +94,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,		XK_w,		spawn,		SHCMD("st -e nmtui; pkill -RTMIN+11 dwmblocks") },
 	{ MODKEY|ShiftMask,			XK_l,		spawn,		SHCMD("st -e lf") },
 	{ MODKEY|ShiftMask,		XK_h,		spawn,		SHCMD("st -e htop") },
-	{ 0, XF86XK_ScreenSaver,	spawn,		SHCMD("slock") },
+	{ 0, XK_Print,	spawn,		SHCMD("scrot ~/shots/screen-$(date +%Y.%m.%d-%H.%M.%S).png && notify-send 'Scrot taken'") },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	STACKKEYS(MODKEY,                          focus)
 	STACKKEYS(MODKEY|ShiftMask,                push)
