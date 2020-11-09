@@ -34,11 +34,10 @@ static const Rule rules[] = {
 	 *	WM_NAME(STRING) = title
 	 */
 	/* class      instance    title       tags mask     isfloating   monitor */
-	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
-	{ "Doom Emacs",  NULL,       NULL,       1 << 8,       0,           -1 },
-	{ "Nitrogen",  NULL,       NULL,       1 << 8,       True,           -1 },
-};
-
+	{ "Gimp",     NULL,       NULL,       0,            1,           -1,        0  },
+	{ "firefox",  NULL,       NULL,       1 << 8,       0,           -1,        0  },
+	{ NULL,       NULL,   "scratchpad",   0,            1,           -1,       's' },
+ };
 /* layout(s) */
 static const float mfact     = 0.50; /* factor of master area size [0.05..0.95] */
 static const int nmaster     = 1;    /* number of clients in master area */
@@ -86,11 +85,14 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, "-l", "20", "-c", "-bw", "2", NULL };
 static const char *termcmd[]  = { "st", NULL };
+/*First arg only serves to match against key in rules*/
+static const char *scratchpadcmd[] = {"s", "st", "-t", "scratchpad", NULL}; 
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+	{ MODKEY,                       XK_grave,  togglescratch,  {.v = scratchpadcmd } },
 	{ MODKEY|ShiftMask,		XK_w,		spawn,		SHCMD("st -e nmtui; pkill -RTMIN+11 dwmblocks") },
 	{ MODKEY|ShiftMask,			XK_l,		spawn,		SHCMD("st -e lf") },
 	{ MODKEY|ShiftMask,		XK_h,		spawn,		SHCMD("st -e htop") },
