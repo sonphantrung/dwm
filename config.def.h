@@ -72,11 +72,11 @@ static const Layout layouts[] = {
 #define STACKKEYS(MOD,ACTION) \
 	{ MOD, XK_j,     ACTION##stack, {.i = INC(+1) } }, \
 	{ MOD, XK_k,     ACTION##stack, {.i = INC(-1) } }, \
-	{ MOD, XK_grave, ACTION##stack, {.i = PREVSEL } }, \
-	{ MOD, XK_q,     ACTION##stack, {.i = 0 } }, \
-	{ MOD, XK_a,     ACTION##stack, {.i = 1 } }, \
-	{ MOD, XK_z,     ACTION##stack, {.i = 2 } }, \
-	{ MOD, XK_x,     ACTION##stack, {.i = -1 } },
+	//{ MOD, XK_grave, ACTION##stack, {.i = PREVSEL } }, \
+	//{ MOD, XK_q,     ACTION##stack, {.i = 0 } }, \
+	//{ MOD, XK_a,     ACTION##stack, {.i = 1 } }, \
+	//{ MOD, XK_z,     ACTION##stack, {.i = 2 } }, \
+	//{ MOD, XK_x,     ACTION##stack, {.i = -1 } },
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
@@ -96,6 +96,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,		XK_w,		spawn,		SHCMD("st -e nmtui; pkill -RTMIN+11 dwmblocks") },
 	{ MODKEY|ShiftMask,			XK_l,		spawn,		SHCMD("st -e lf") },
 	{ MODKEY|ShiftMask,		XK_h,		spawn,		SHCMD("st -e htop") },
+	{ MODKEY|ShiftMask,		XK_c,		spawn,		SHCMD("clipmenu && notify-send 'Copied'") },
 	{ 0, XK_Print,	spawn,		SHCMD("scrot ~/shots/screen-$(date +%Y.%m.%d-%H.%M.%S).png && notify-send 'Scrot taken'") },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	STACKKEYS(MODKEY,                          focus)
