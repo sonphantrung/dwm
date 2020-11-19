@@ -4,10 +4,9 @@
 This is my [**DWM**](https://dwm.suckless.org) *config*
 
 ## The overview
-- The Status: [Slstatus](https://gitlab.com/phantrungson17/slstaus)
-- Font: JetBrainsMono Nerd Font
-- Additional layouts: [Grid](https://dwm.suckless.org/patches/gridmode/), [Fibonacci](https://dwm.suckless.org/patches/fibonacci/), [Centered](https://dwm.suckless.org/patches/centeredmaster/)
-- Patches: In the **patches/** folder
+- The Status: [Slstatus](https://gitlab.com/phantrungson17/slstaus) (Now is dwmstatusgen, which is in my dotfiles.)
+- Font: JetBrains Mono 
+- Patches: In the **patches/** folder (Unlisted: {fix,no}borders; namedscratchpads)
 ### Installation
 Clone my repo, then:
 ```
