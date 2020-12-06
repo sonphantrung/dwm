@@ -2269,21 +2269,6 @@ void
 togglefullscr(const Arg *arg)
 {
   if(selmon->sel)
-	selmon->showbar = !selmon->showbar;
-	updatebarpos(selmon);
-	resizebarwin(selmon);
-	if (showsystray) {
-		XWindowChanges wc;
-		if (!selmon->showbar)
-			wc.y = -bh;
-		else if (selmon->showbar) {
-			wc.y = 0;
-			if (!selmon->topbar)
-				wc.y = selmon->mh - bh;
-		}
-		XConfigureWindow(dpy, systray->win, CWY, &wc);
-	}
-	arrange(selmon);
     setfullscreen(selmon->sel, !selmon->sel->isfullscreen);
 }
 

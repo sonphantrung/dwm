@@ -39,8 +39,8 @@ static const Rule rules[] = {
 	 */
 	/* class      instance    title       tags mask     isfloating   monitor    scratch key */
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1,        0  },
-	{ NULL,       NULL,   "scratchpad",  SCRATCHPAD_MASK,            1,           -1,       's' },
-	{ NULL,       NULL,   "scratch",   SCRATCHPAD_MASK,            1,           -1,       0 },
+	{ "st",       NULL,   "scratchpad",  SCRATCHPAD_MASK,            1,           -1,       's' },
+	{ "st",       NULL,   "scratch",   SCRATCHPAD_MASK,            1,           -1,       0 },
  };
 /* layout(s) */
 static const float mfact     = 0.50; /* factor of master area size [0.05..0.95] */
