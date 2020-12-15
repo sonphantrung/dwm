@@ -99,13 +99,14 @@ static const char *scratchpadcmd[] = {"s", "st", "-t", "scratchpad", NULL};
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
-	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+	{ MODKEY,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_grave,  togglescratch,  {.v = scratchpadcmd } },
-	{ MODKEY|ShiftMask,		XK_w,		spawn,		SHCMD("st -e nmtui; pkill -RTMIN+11 dwmblocks") },
+	{ MODKEY|ShiftMask,		XK_w,		spawn,		SHCMD("st -e nmtui") },
 	{ MODKEY|ShiftMask,			XK_l,		spawn,		SHCMD("st -e lf") },
 	{ MODKEY|ShiftMask,		XK_h,		spawn,		SHCMD("st -e htop") },
 	{ MODKEY|ShiftMask,		XK_c,		spawn,		SHCMD("clipmenu && herbe 'Copied'") },
 	{ Mod1Mask|ShiftMask,		XK_c,		spawn,		SHCMD("sysact") },
+	{ Mod1Mask,		XK_d,		spawn,		SHCMD("rofi -show drun -show-icons") },
 	{ 0, XK_Print,	spawn,		SHCMD("scrot ~/shots/screen-$(date +%Y.%m.%d-%H.%M.%S).png && herbe 'Scrot taken'") },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	STACKKEYS(MODKEY,                          focus)
@@ -114,7 +115,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
-	{ MODKEY,                       XK_Return, zoom,           {0} },
+	{ MODKEY|ShiftMask,                       XK_Return, zoom,           {0} },
 	{ MODKEY|Mod1Mask,              XK_u,      incrgaps,       {.i = +1 } },
 	{ MODKEY|Mod1Mask|ShiftMask,    XK_u,      incrgaps,       {.i = -1 } },
 	{ MODKEY|Mod1Mask,              XK_i,      incrigaps,      {.i = +1 } },
