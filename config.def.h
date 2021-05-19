@@ -16,13 +16,13 @@ static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display 
 static const int showsystray        = 1;     /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const char *fonts[]          = { "JetBrains Mono:size=10", "Hack Nerd Font:size:8:antialias=true:autohint=true", "Joypixels:size:8:antialias=true:autohint=true" };
-static const char dmenufont[]       = "JetBrainsMono Nerd Font:size=10";
-static const char col_gray1[]       = "#2E3440";
-static const char col_gray2[]       = "#bf616a";
-static const char col_gray3[]       = "#bbbbbb";
-static const char col_gray4[]       = "#e5e9f0";
-static const char col_cyan[]        = "#88C0D0";
+static const char *fonts[]          = { "JetBrains Mono:size=10", "Hack Nerd Font:size:8:antialias=true:autohint=true" };
+static const char dmenufont[]       = "JetBrains Mono:size=10";
+static const char col_gray1[]       = "#282a2e";
+static const char col_gray2[]       = "#822a2a";
+static const char col_gray3[]       = "#d0ddd4";
+static const char col_gray4[]       = "#d7dcd9";
+static const char col_cyan[]        = "#8abeb7";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray1 },
@@ -101,7 +101,8 @@ static Key keys[] = {
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY,             XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_grave,  togglescratch,  {.v = scratchpadcmd } },
-	{ MODKEY|ShiftMask,		XK_w,		spawn,		SHCMD("st -e nmtui") },
+	{ MODKEY|ShiftMask,		XK_w,		spawn,		SHCMD("st -e nmtui; kill -45 $(pidof dwmblocks)") },
+	{ MODKEY|ShiftMask,		XK_p,		spawn,		SHCMD("st -e pulsemixer; kill -44 $(pidof dwmblocks)") },
 	{ MODKEY|ShiftMask,			XK_l,		spawn,		SHCMD("st -e lf") },
 	{ MODKEY|ShiftMask,		XK_h,		spawn,		SHCMD("st -e htop") },
 	{ MODKEY|ShiftMask,		XK_c,		spawn,		SHCMD("clipmenu && herbe 'Copied'") },
@@ -170,9 +171,9 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_minus, scratchpad_hide, {0} },
 	{ MODKEY,                       XK_equal,scratchpad_remove,{0} },
 
-	{ 0, XF86XK_AudioMute,		spawn,		SHCMD("pamixer -t") },
-	{ 0, XF86XK_AudioRaiseVolume,	spawn,		SHCMD("pamixer --allow-boost -i 3") },
-	{ 0, XF86XK_AudioLowerVolume,	spawn,		SHCMD("pamixer --allow-boost -d 3") },
+{ 0, XF86XK_AudioMute,		spawn,		SHCMD("pamixer -t; kill -44 $(pidof dwmblocks)") },
+	{ 0, XF86XK_AudioRaiseVolume,	spawn,		SHCMD("pamixer --allow-boost -i 3; kill -44 $(pidof dwmblocks)") },
+	{ 0, XF86XK_AudioLowerVolume,	spawn,		SHCMD("pamixer --allow-boost -d 3; kill -44 $(pidof dwmblocks)") },
 	{ 0, XF86XK_MonBrightnessUp,	spawn,		SHCMD("xbacklight -inc 15") },
 	{ 0, XF86XK_MonBrightnessDown,	spawn,		SHCMD("xbacklight -dec 15") },
 };
