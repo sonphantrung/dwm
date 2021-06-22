@@ -86,7 +86,7 @@ enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum { SchemeNorm, SchemeSel }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
-       NetWMFullscreen, NetActiveWindow, NetWMWindowType,
+       NetWMFullscreen, NetActiveWindow, NetWMWindowType, NetWMWindowTypeDock,
        NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
 enum { Manager, Xembed, XembedInfo, XLast }; /* Xembed atoms */
 enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms */
@@ -2247,6 +2247,7 @@ setup(void)
 	netatom[NetWMCheck] = XInternAtom(dpy, "_NET_SUPPORTING_WM_CHECK", False);
 	netatom[NetWMFullscreen] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
 	netatom[NetWMWindowType] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
+	netatom[NetWMWindowTypeDock] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DOCK", False);
 	netatom[NetWMWindowTypeDialog] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
 	netatom[NetClientList] = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
 	xatom[Manager] = XInternAtom(dpy, "MANAGER", False);
@@ -2842,7 +2843,7 @@ updatesystray(void)
 	if (!showsystray)
 		return;
 	if (systrayonleft)
-		x -= sw + lrpad / 2;
+		x -= sw + sp + lrpad / 2;
 	if (!systray) {
 		/* init systray */
 		if (!(systray = (Systray *)calloc(1, sizeof(Systray))))
@@ -2854,6 +2855,8 @@ updatesystray(void)
 		XSelectInput(dpy, systray->win, SubstructureNotifyMask);
 		XChangeProperty(dpy, systray->win, netatom[NetSystemTrayOrientation], XA_CARDINAL, 32,
 				PropModeReplace, (unsigned char *)&netatom[NetSystemTrayOrientationHorz], 1);
+		XChangeProperty(dpy, systray->win, netatom[NetWMWindowType], XA_ATOM, 32,
+				PropModeReplace, (unsigned char *)&netatom[NetWMWindowTypeDock], 1);
 		XChangeWindowAttributes(dpy, systray->win, CWEventMask|CWOverrideRedirect|CWBackPixel, &wa);
 		XMapRaised(dpy, systray->win);
 		XSetSelectionOwner(dpy, netatom[NetSystemTray], systray->win, CurrentTime);
