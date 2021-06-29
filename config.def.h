@@ -1,7 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #include <X11/XF86keysym.h>
 
-
 /* appearance */
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
@@ -79,11 +78,11 @@ static const Layout layouts[] = {
 #define STACKKEYS(MOD,ACTION) \
 	{ MOD, XK_j,     ACTION##stack, {.i = INC(+1) } }, \
 	{ MOD, XK_k,     ACTION##stack, {.i = INC(-1) } }, \
-	{ MOD, XK_Menu, ACTION##stack, {.i = PREVSEL } }, \
+/* 	{ MOD, XK_Menu, ACTION##stack, {.i = PREVSEL } }, \
 	{ MOD, XK_v,     ACTION##stack, {.i = 0 } }, \
 	{ MOD, XK_a,     ACTION##stack, {.i = 1 } }, \
 	{ MOD, XK_z,     ACTION##stack, {.i = 2 } }, \
-	{ MOD, XK_x,     ACTION##stack, {.i = -1 } },
+	{ MOD, XK_x,     ACTION##stack, {.i = -1 } }, */
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
@@ -96,6 +95,8 @@ static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont,
 static const char *termcmd[]  = { "st", NULL };
 /*First arg only serves to match against key in rules*/
 static const char *scratchpadcmd[] = {"st", "-t", "scratchpad", "-g", "100x30+350+90", NULL}; 
+
+#include "shiftview.c"
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
@@ -148,6 +149,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_r,      setlayout,      {.v = &layouts[5]} },
 	{ MODKEY|ShiftMask,                       XK_u,      setlayout,      {.v = &layouts[6]} },
 	{ MODKEY|ShiftMask,                       XK_o,      setlayout,      {.v = &layouts[7]} },
+	{ MODKEY|ControlMask,                       XK_o,      setlayout,      {.v = &layouts[7]} },
 	{ MODKEY,                       XK_u,      setlayout,      {.v = &layouts[8]} },
 	{ MODKEY,                       XK_o,      setlayout,      {.v = &layouts[9]} },
 	{ MODKEY|ControlMask,		XK_comma,  cyclelayout,    {.i = -1 } },
@@ -170,6 +172,10 @@ static Key keys[] = {
 	TAGKEYS(                        XK_7,                      6)
 	TAGKEYS(                        XK_8,                      7)
 	TAGKEYS(                        XK_9,                      8)
+	{ MODKEY,			XK_Page_Up,	shiftview,	{ .i = -1 } },
+	{ MODKEY|ShiftMask,		XK_Page_Up,	shifttag,	{ .i = -1 } },
+	{ MODKEY,			XK_Page_Down,	shiftview,	{ .i = +1 } },
+	{ MODKEY|ShiftMask,		XK_Page_Down,	shifttag,	{ .i = +1 } },
 	{ MODKEY|ShiftMask,             XK_BackSpace, quit,        {0} },
 	{ Mod1Mask|ControlMask, XK_r,      quit,           {1} }, 
 	{ MODKEY,                       XK_minus, scratchpad_show, {0} },
@@ -201,4 +207,3 @@ static Button buttons[] = {
 	{ ClkTagBar,            MODKEY,         Button1,        tag,            {0} },
 	{ ClkTagBar,            MODKEY,         Button3,        toggletag,      {0} },
 };
-
