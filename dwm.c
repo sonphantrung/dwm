@@ -536,11 +536,6 @@ buttonpress(XEvent *e)
 	Monitor *m;
 	XButtonPressedEvent *ev = &e->xbutton;
 
-	int strw = 0;
-
-	if (showsystray && selmon == systraytomon(selmon) && !systrayonleft)
-	  strw = getsystraywidth();
-	
 	click = ClkRootWin;
 	/* focus monitor if necessary */
 	if ((m = wintomon(ev->window)) && m != selmon) {
@@ -563,7 +558,7 @@ buttonpress(XEvent *e)
 			arg.ui = 1 << i;
 		} else if (ev->x < x + blw)
 			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - statusw - strw){
+		else if (ev->x > selmon->ww - statusw){
 			x = selmon->ww - statusw;
             click = ClkStatusText;
 			char *text, *s, ch;
