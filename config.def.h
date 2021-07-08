@@ -35,6 +35,11 @@ static const char *colors[][3]      = {
 /* tagging */
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" }; 
 
+static const unsigned int ulinepad	= 5;	/* horizontal padding between the underline and tag */
+static const unsigned int ulinestroke	= 2;	/* thickness / height of the underline */
+static const unsigned int ulinevoffset	= 0;	/* how far above the bottom of the bar the line should appear */
+static const int ulineall 		= 0;	/* 1 to show underline on all tags, 0 for just the active ones */
+
 static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
@@ -94,7 +99,7 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, "-l", "20", "-c", "-bw", "2", NULL };
 static const char *termcmd[]  = { "st", NULL };
 /*First arg only serves to match against key in rules*/
-static const char *scratchpadcmd[] = {"st", "-t", "scratchpad", "-g", "100x30+350+90", NULL}; 
+static const char *scratchpadcmd[] = {"st", "-t", "scratchpad", NULL}; 
 
 #include "shiftview.c"
 
