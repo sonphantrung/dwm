@@ -680,6 +680,11 @@ clientmessage(XEvent *e)
 				free(c);
 				return;
 			}
+
+			/* Clear status bar to avoid artifacts beneath systray icons */
+			drw_rect(drw, 0, 0, selmon->ww, bh, 1, 1);
+			drw_map(drw, selmon->barwin, 0, 0, selmon->ww, bh);
+
 			c->mon = selmon;
 			c->next = systray->icons;
 			systray->icons = c;
@@ -1109,8 +1114,19 @@ drawbars(void)
 {
 	Monitor *m;
 
+	if (showsystray) {
+		/* Clear status bar to avoid artifacts beneath systray icons */
+		drw_setscheme(drw, scheme[SchemeNorm]);
+		drw_rect(drw, 0, 0, selmon->ww, bh, 1, 1);
+		drw_map(drw, selmon->barwin, 0, 0, selmon->ww, bh);
+	}
+
 	for (m = mons; m; m = m->next)
 		drawbar(m);
+
+
+	if (showsystray)
+		updatesystray();
 }
 
 void
@@ -1735,8 +1751,6 @@ resize(Client *c, int x, int y, int w, int h, int interact)
 void
 resizebarwin(Monitor *m) {
 	unsigned int w = m->ww;
-	if (showsystray && m == systraytomon(m) && !systrayonleft)
-		w -= getsystraywidth();
 	XMoveResizeWindow(dpy, m->barwin, m->wx + sp, m->by + vp, w - 2 * sp, bh);
 }
 
