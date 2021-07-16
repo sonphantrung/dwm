@@ -54,7 +54,7 @@ static const Rule rules[] = {
 	 */
 	/* class      instance    title       tags mask     isfloating   monitor    */
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
-	{ "st",       NULL,   "scratchpad",  SCRATCHPAD_MASK,            1,           -1 },
+	{ "st",       NULL,       "scratchpad",  SCRATCHPAD_MASK,            1,           -1 },
  };
 /* layout(s) */
 static const float mfact     = 0.50; /* factor of master area size [0.05..0.95] */
@@ -105,7 +105,6 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, "-l", "20", "-c", "-bw", "2", NULL };
 static const char *termcmd[]  = { "st", NULL };
-/*First arg only serves to match against key in rules*/
 static const char *scratchpadcmd[] = {"st", "-t", "scratchpad", NULL}; 
 
 #include "shiftview.c"
@@ -168,6 +167,22 @@ static Key keys[] = {
 	{ MODKEY|ControlMask,           XK_period, cyclelayout,    {.i = +1 } },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
+	{ MODKEY,                       XK_Down,   moveresize,     {.v = "0x 25y 0w 0h" } },
+	{ MODKEY,                       XK_Up,     moveresize,     {.v = "0x -25y 0w 0h" } },
+	{ MODKEY,                       XK_Right,  moveresize,     {.v = "25x 0y 0w 0h" } },
+	{ MODKEY,                       XK_Left,   moveresize,     {.v = "-25x 0y 0w 0h" } },
+	{ MODKEY|ShiftMask,             XK_Down,   moveresize,     {.v = "0x 0y 0w 25h" } },
+	{ MODKEY|ShiftMask,             XK_Up,     moveresize,     {.v = "0x 0y 0w -25h" } },
+	{ MODKEY|ShiftMask,             XK_Right,  moveresize,     {.v = "0x 0y 25w 0h" } },
+	{ MODKEY|ShiftMask,             XK_Left,   moveresize,     {.v = "0x 0y -25w 0h" } },
+	{ MODKEY|ControlMask,           XK_Up,     moveresizeedge, {.v = "t"} },
+	{ MODKEY|ControlMask,           XK_Down,   moveresizeedge, {.v = "b"} },
+	{ MODKEY|ControlMask,           XK_Left,   moveresizeedge, {.v = "l"} },
+	{ MODKEY|ControlMask,           XK_Right,  moveresizeedge, {.v = "r"} },
+	{ MODKEY|ControlMask|ShiftMask, XK_Up,     moveresizeedge, {.v = "T"} },
+	{ MODKEY|ControlMask|ShiftMask, XK_Down,   moveresizeedge, {.v = "B"} },
+	{ MODKEY|ControlMask|ShiftMask, XK_Left,   moveresizeedge, {.v = "L"} },
+	{ MODKEY|ControlMask|ShiftMask, XK_Right,  moveresizeedge, {.v = "R"} },
 	{ MODKEY|ShiftMask,             XK_f,      togglefullscr,  {0} },
 	{ MODKEY,                       XK_0,      view,           {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            {.ui = ~0 } },
