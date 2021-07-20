@@ -368,6 +368,7 @@ static Visual *visual;
 static int depth;
 static Colormap cmap;
 
+#include "vanitygaps.h"
 /* configuration, allows nested code to access above variables */
 #include "config.h"
 
@@ -3079,6 +3080,8 @@ togglebar(const Arg *arg)
 	}
 	arrange(selmon);
 }
+
+#include "vanitygaps.c"
 
 void
 togglefloating(const Arg *arg)
