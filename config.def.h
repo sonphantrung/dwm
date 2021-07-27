@@ -16,8 +16,8 @@ static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display 
 static const int showsystray        = 1;     /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const int vertpad            = 10;       /* vertical padding of bar */
-static const int sidepad            = 10;       /* horizontal padding of bar */
+static const int vertpad            = 0;       /* vertical padding of bar */
+static const int sidepad            = 0;       /* horizontal padding of bar */
 static const int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static const char *fonts[]          = { "JetBrains Mono:size=10", "Hack Nerd Font:size:8:antialias=true:autohint=true", "Noto Color Emoji:size:8:antialias=true:autohint=true"};
 static const char dmenufont[]       = "JetBrains Mono:size=10";
@@ -26,7 +26,7 @@ static const char col_gray2[]       = "#822a2a";
 static const char col_gray3[]       = "#d0ddd4";
 static const char col_gray4[]       = "#d7dcd9";
 static const char col_cyan[]        = "#8abeb7";
-static const unsigned int baralpha = 0xff;
+static const unsigned int baralpha = 0xd0;
 static const unsigned int borderalpha = OPAQUE;
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
@@ -89,8 +89,8 @@ static const Layout layouts[] = {
 #define STACKKEYS(MOD,ACTION) \
 	{ MOD, XK_j,     ACTION##stack, {.i = INC(+1) } }, \
 	{ MOD, XK_k,     ACTION##stack, {.i = INC(-1) } }, \
-/* 	{ MOD, XK_Menu, ACTION##stack, {.i = PREVSEL } }, \
-	{ MOD, XK_v,     ACTION##stack, {.i = 0 } }, \
+	{ MOD, XK_Menu, ACTION##stack, {.i = PREVSEL } }, \
+/*	{ MOD, XK_v,     ACTION##stack, {.i = 0 } }, \
 	{ MOD, XK_a,     ACTION##stack, {.i = 1 } }, \
 	{ MOD, XK_z,     ACTION##stack, {.i = 2 } }, \
 	{ MOD, XK_x,     ACTION##stack, {.i = -1 } }, */
@@ -102,7 +102,7 @@ static const Layout layouts[] = {
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, "-l", "20", "-c", "-bw", "2", NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, "-l", "20", "-p", "Run:", "-vrtf", "-c", "-bw", "2", NULL };
 static const char *termcmd[]  = { "st", NULL };
 static const char *scratchpadcmd[] = {"st", "-t", "scratchpad", NULL}; 
 
@@ -199,12 +199,6 @@ static Key keys[] = {
 	{ MODKEY,                       XK_minus, scratchpad_show, {0} },
 	{ MODKEY|ShiftMask,             XK_minus, scratchpad_hide, {0} },
 	{ MODKEY,                       XK_equal,scratchpad_remove,{0} },
-
-    { 0, XF86XK_AudioMute,		spawn,		SHCMD("pamixer -t; kill -44 $(pidof dwmblocks)") },
-	{ 0, XF86XK_AudioRaiseVolume,	spawn,		SHCMD("pamixer --allow-boost -i 3; kill -44 $(pidof dwmblocks)") },
-	{ 0, XF86XK_AudioLowerVolume,	spawn,		SHCMD("pamixer --allow-boost -d 3; kill -44 $(pidof dwmblocks)") },
-	{ 0, XF86XK_MonBrightnessUp,	spawn,		SHCMD("xbacklight -inc 15") },
-	{ 0, XF86XK_MonBrightnessDown,	spawn,		SHCMD("xbacklight -dec 15") },
 };
 
 /* button definitions */

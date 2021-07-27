@@ -7,7 +7,7 @@ This is my [**DWM**](https://dwm.suckless.org) *config*
 ## The overview
 - The Status: [Slstatus](https://gitlab.com/phantrungson17/slstaus) (Now is dwmblocks)
 - Font: JetBrains Mono
-- Patches: In the **patches/** folder (Unlisted: noborders; barheight; cfacts; alwayscenter)
+- Patches: In the **patches/** folder (Unlisted: removeborders; barheight; cfacts; alwayscenter)
 ### Installation
 Clone my repo, then:
 ```
