@@ -2371,7 +2371,7 @@ resizeclient(Client *c, int x, int y, int w, int h)
 
        if (c->isfloating || selmon->lt[selmon->sellt]->arrange == NULL) {
        } else {
-               if (selmon->lt[selmon->sellt]->arrange == monocle || (n == 1 && !selmon->sel->isfloating && !nexttiled(selmon->clients)->isfloating) ) {
+               if (selmon->lt[selmon->sellt]->arrange == monocle || n == 1) {
                        wc.border_width = 0;
                        c->w = wc.width += c->bw * 2;
                        c->h = wc.height += c->bw * 2;
