@@ -62,6 +62,7 @@ static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
+#define NOSIGNAL 1
 #define FORCE_VSPLIT 1  /* nrowgrid layout: force two clients to always split vertically */
 static const Layout layouts[] = {
 	/* symbol     arrange function */
@@ -98,13 +99,21 @@ static const Layout layouts[] = {
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
-#define STATUSBAR "dwmblocks"
+//#define STATUSBAR "dwmblocks"
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, "-l", "20", "-p", "Run:", "-vrtf", "-c", "-bw", "2", NULL };
 static const char *termcmd[]  = { "st", NULL };
 static const char *scratchpadcmd[] = {"st", "-t", "scratchpad", NULL}; 
+
+#ifdef NOSIGNAL
+/* commands spawned when clicking statusbar, the mouse button pressed is exported as BUTTON */
+static const StatusCmd statuscmds[] = {
+	{ "volume", 1 },
+};
+static const char *statuscmd[] = { "/bin/sh", "-c", NULL, NULL };
+#endif
 
 #include "shiftview.c"
 
@@ -195,7 +204,6 @@ static Key keys[] = {
 	{ MODKEY,			XK_Page_Down,	shiftview,	{ .i = +1 } },
 	{ MODKEY|ShiftMask,		XK_Page_Down,	shifttag,	{ .i = +1 } },
 	{ MODKEY|ShiftMask,             XK_BackSpace, quit,        {0} },
-	{ Mod1Mask|ControlMask, XK_r,      quit,           {1} }, 
 	{ MODKEY,                       XK_minus, scratchpad_show, {0} },
 	{ MODKEY|ShiftMask,             XK_minus, scratchpad_hide, {0} },
 	{ MODKEY,                       XK_equal,scratchpad_remove,{0} },
@@ -206,9 +214,15 @@ static Key keys[] = {
 static Button buttons[] = {
 	/* click                event mask      button          function        argument */
 	{ ClkLtSymbol,          0,              Button1,        cyclelayout,    {.i = +1 } },
+#ifdef NOSIGNAL
+	{ ClkStatusText,        0,              Button1,        spawn,   {.v = statuscmd} },
+	{ ClkStatusText,        0,              Button2,        spawn,   {.v = statuscmd} },
+	{ ClkStatusText,        0,              Button3,        spawn,   {.v = statuscmd} },
+#else
 	{ ClkStatusText,        0,              Button1,        sigstatusbar,   {.i = 1} },
 	{ ClkStatusText,        0,              Button2,        sigstatusbar,   {.i = 2} },
 	{ ClkStatusText,        0,              Button3,        sigstatusbar,   {.i = 3} },
+#endif
 	/* placemouse options, choose which feels more natural:
 	 *    0 - tiled position is relative to mouse cursor
 	 *    1 - tiled postiion is relative to window center
