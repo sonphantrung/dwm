@@ -66,6 +66,7 @@
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
 #define WIDTH(X)                ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X)               ((X)->h + 2 * (X)->bw)
+#define WTYPE                   "_NET_WM_WINDOW_TYPE_"
 #define TAGMASK                 ((1 << LENGTH(tags)) - 1)
 #define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define TRUNC(X,A,B)            (MAX((A), MIN((X), (B))))
@@ -99,6 +100,18 @@ enum { Manager, Xembed, XembedInfo, XLast }; /* Xembed atoms */
 enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms */
 enum { ClkTagBar, ClkLtSymbol, ClkStatusText,
        ClkClientWin, ClkRootWin, ClkLast }; /* clicks */
+// Adding an enum here is not strictly necessary, but it
+// can help avoid "magic" numbers in your code base. An
+// example of this is when you read the code and you go
+// "wtf is 58?". Here we have that DoNothing is 0, Focus
+// is 1 and Urgent is 3. Other enums have a *Last value
+// at the end - this is only used when one need to loop
+// through all the values. Also note that you can use
+// these rather than plain numbers in your configuration
+// file, e.g. defnetactiverule = Focus;
+// I left the configuration with plain numbers just for
+// consistency.
+enum { DoNothing, Focus, FocusPlus, Urgent, ShowClient, MoveClient, FocusIfShown }; /* net active rule options */
 
 typedef union {
 	int i;
@@ -125,6 +138,11 @@ struct Client {
 	int oldx, oldy, oldw, oldh;
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh;
 	int bw, oldbw;
+	// We need to associate a specific behaviour on
+	// a per-client basis. As such we need to set a
+	// value for the client and therefore we also
+	// need a variable to store this in.
+	int onnetactive;
 	unsigned int tags;
 	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
 	int beingmoved;
@@ -178,10 +196,28 @@ typedef struct {
 	const char *class;
 	const char *instance;
 	const char *title;
+	const char *wintype;
 	unsigned int tags;
 	int isfloating;
 	int monitor;
+	// Adding our new rule option, making it an int.
+	// Note that the order of the fields here are
+	// important and the "columns" for the rules
+	// array in your config needs to be in this
+	// exact order.
+	int netactiverule;
 } Rule;
+
+#define RULE(...) { .monitor = -1, __VA_ARGS__ },
+
+/* Cross patch compatibility rule macro helper macros */
+#define FLOATING , .isfloating = 1
+#define CENTERED
+#define PERMANENT
+#define FAKEFULLSCREEN
+#define NOSWALLOW
+#define TERMINAL
+#define SWITCHTAG
 
 #ifdef NOSIGNAL
 typedef struct {
@@ -414,6 +450,7 @@ void
 applyrules(Client *c)
 {
 	const char *class, *instance;
+	Atom wintype;
 	unsigned int i;
 	const Rule *r;
 	Monitor *m;
@@ -422,21 +459,33 @@ applyrules(Client *c)
 	/* rule matching */
 	c->isfloating = 0;
 	c->tags = 0;
+	// In case we have no rule set up for our client, or
+	// the rule value is -1, then we'll want to set the
+	// default action to take when we receive a net active
+	// signal.
+	c->onnetactive = defnetactiverule;
 	XGetClassHint(dpy, c->win, &ch);
 	class    = ch.res_class ? ch.res_class : broken;
 	instance = ch.res_name  ? ch.res_name  : broken;
+	wintype  = getatomprop(c, netatom[NetWMWindowType]);
 
 	for (i = 0; i < LENGTH(rules); i++) {
 		r = &rules[i];
 		if ((!r->title || strstr(c->name, r->title))
 		&& (!r->class || strstr(class, r->class))
-		&& (!r->instance || strstr(instance, r->instance)))
+		&& (!r->instance || strstr(instance, r->instance))
+		&& (!r->wintype || wintype == XInternAtom(dpy, r->wintype, False)))
 		{
 			c->isfloating = r->isfloating;
 			c->tags |= r->tags;
 			for (m = mons; m && m->num != r->monitor; m = m->next);
 			if (m)
 				c->mon = m;
+			// If our net active rule is not -1, then associate
+			// that action value with our client.
+			if (r->netactiverule > -1)
+				c->onnetactive = r->netactiverule;
+
 		}
 	}
 	if (ch.res_class)
@@ -718,6 +767,7 @@ clientmessage(XEvent *e)
 	XSetWindowAttributes swa;
 	XClientMessageEvent *cme = &e->xclient;
 	Client *c = wintoclient(cme->window);
+	unsigned int i;
 
 	if (showsystray && cme->window == systray->win && cme->message_type == netatom[NetSystemTrayOP]) {
 		/* add systray icons */
@@ -781,8 +831,74 @@ clientmessage(XEvent *e)
 				|| (cme->data.l[0] == 2 /* _NET_WM_STATE_TOGGLE */ && !c->isfullscreen)));
 		}
 	} else if (cme->message_type == netatom[NetActiveWindow]) {
-		if (c != selmon->sel && !c->isurgent)
-			seturgent(c, 1);
+		// OK, so we have received the net active window signal,
+		// let's decide what to do about it.
+		switch(c->onnetactive) {
+		default:
+			break;
+		case DoNothing:
+			// Yes let's just not do anything. This is
+			// redudnant as we could have just left it
+			// for the default, but at last this is
+			// explicit and sort of readable.
+			break;
+		case Focus:
+			// This is lifted straight from the original
+			// focusonnetactive patch.
+			for (i = 0; i < LENGTH(tags) && !((1 << i) & c->tags); i++);
+			if (i < LENGTH(tags)) {
+				const Arg a = {.ui = 1 << i};
+				selmon = c->mon;
+				view(&a);
+				focus(c);
+				restack(selmon);
+			}
+			break;
+		case FocusPlus:
+			// Similar to the original focusonnetactive
+			// logic, but shows the client's tag in
+			// addition to your current tags.
+			for (i = 0; i < LENGTH(tags) && !((1 << i) & c->tags); i++);
+			if (i < LENGTH(tags)) {
+				selmon = c->mon;
+				view(&((Arg) {.ui = c->mon->seltags | (1 << i)}));
+				focus(c);
+				restack(selmon);
+			}
+			break;
+		case ShowClient:
+			// If client is not already on any of the currently
+			// viewed tags, then let the client be shown on the
+			// currently viewed tag(s) in addition to the client's
+			// existing tags.
+			if (!(c->mon->tagset[c->mon->seltags] & c->tags))
+				c->tags |= c->mon->tagset[c->mon->seltags];
+			focus(c);
+			arrange(c->mon);
+			break;
+		case MoveClient:
+			// If client is not already on any of the currently
+			// viewed tags, then move the client to the currently
+			// viewed tag(s).
+			if (!(c->mon->tagset[c->mon->seltags] & c->tags))
+				c->tags = c->mon->tagset[c->mon->seltags];
+			focus(c);
+			arrange(c->mon);
+			break;
+		case FocusIfShown:
+			// If client is already shown on the currently viewed
+			// tag then focus it, otherwise do nothing.
+			if ((c->mon->tagset[c->mon->seltags] & c->tags))
+				focus(c);
+			break;
+		case Urgent:
+			// This is simply the original code.
+			if (c != selmon->sel && !c->isurgent)
+				seturgent(c, 1);
+			break;
+		// You could easily extend this to add other behaviours
+		// should you want it.
+		}
 	}
 }
 

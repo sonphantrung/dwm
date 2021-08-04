@@ -16,6 +16,16 @@ static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display 
 static const int showsystray        = 1;     /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
+/* Default action to take when we receive a net active signal.
+ *    0 - disable / does nothing
+ *    1 - focus the client (as per the focusonnetactive patch)
+ *    2 - focus the client tag in addition to the current tags
+ *    3 - set the urgency bit (as per dwm default)
+ *    4 - client is shown on current tag in addition to its existing tags
+ *    5 - client is moved to current tag
+ *    6 - client receives focus only if current tag is shown
+ */
+static const int defnetactiverule   = 1;
 static const int vertpad            = 0;       /* vertical padding of bar */
 static const int sidepad            = 0;       /* horizontal padding of bar */
 static const int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
@@ -51,10 +61,15 @@ static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
+	 *	WM_WINDOW_ROLE(STRING) = role
+	 *	_NET_WM_WINDOW_TYPE(ATOM) = wintype
 	 */
-	/* class      instance    title       tags mask     isfloating   monitor    */
-	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
-	{ "st",       NULL,       "scratchpad",  SCRATCHPAD_MASK,            1,           -1 },
+	RULE(.wintype = WTYPE "DIALOG", .isfloating = 1)
+	RULE(.wintype = WTYPE "UTILITY", .isfloating = 1)
+	RULE(.wintype = WTYPE "TOOLBAR", .isfloating = 1)
+	RULE(.wintype = WTYPE "SPLASH", .isfloating = 1)
+	RULE(.class = "Gimp", .tags = 1 << 4)
+	RULE(.class = "Firefox", .tags = 1 << 7)
  };
 /* layout(s) */
 static const float mfact     = 0.50; /* factor of master area size [0.05..0.95] */
