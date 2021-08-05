@@ -353,6 +353,7 @@ static void updatestatus(void);
 static void updatesystray(void);
 static void updatesystrayicongeom(Client *i, int w, int h);
 static void updatesystrayiconstate(Client *i, XPropertyEvent *ev);
+static void updatetitle(Client *c);
 static void updatewindowtype(Client *c);
 static void updatewmhints(Client *c);
 static void view(const Arg *arg);
@@ -1893,6 +1894,7 @@ manage(Window w, XWindowAttributes *wa)
 	c->h = c->oldh = wa->height;
 	c->oldbw = wa->border_width;
     c->cfact = 1.0;
+    updatetitle(c);
 
 	if (XGetTransientForHint(dpy, w, &trans) && (t = wintoclient(trans))) {
 		c->mon = t->mon;
@@ -2408,6 +2410,8 @@ propertynotify(XEvent *e)
 			drawbars();
 			break;
 		}
+               if (ev->atom == XA_WM_NAME || ev->atom == netatom[NetWMName])
+                       updatetitle(c);
 		if (ev->atom == netatom[NetWMWindowType])
 			updatewindowtype(c);
 	}
@@ -3822,6 +3826,16 @@ updatesystray(void)
 	XSync(dpy, False);
     drawbar(m);
 }
+
+void
+updatetitle(Client *c)
+{
+       if (!gettextprop(c->win, netatom[NetWMName], c->name, sizeof c->name))
+               gettextprop(c->win, XA_WM_NAME, c->name, sizeof c->name);
+       if (c->name[0] == '\0') /* hack to mark broken clients */
+               strcpy(c->name, broken);
+}
+
 
 void
 updatewindowtype(Client *c)
