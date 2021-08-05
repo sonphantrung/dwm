@@ -37,7 +37,7 @@ incrgaps(const Arg *arg)
 	);
 }
 
-void
+/* void
 incrigaps(const Arg *arg)
 {
 	setgaps(
@@ -101,7 +101,7 @@ incrivgaps(const Arg *arg)
 		selmon->gappih,
 		selmon->gappiv + arg->i
 	);
-}
+} */
 
 void
 getgaps(Monitor *m, int *oh, int *ov, int *ih, int *iv, unsigned int *nc)
