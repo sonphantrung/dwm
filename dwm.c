@@ -47,6 +47,7 @@
 #include <sys/sysctl.h>
 #include <kvm.h>
 #endif /* __OpenBSD */
+#include <Imlib2.h>
 
 #include "drw.h"
 #include "util.h"
@@ -176,32 +177,6 @@ typedef struct {
 	void (*arrange)(Monitor *);
 } Layout;
 
-typedef struct Pertag Pertag;
-struct Monitor {
-	char ltsymbol[16];
-	float mfact;
-	int nmaster;
-	int num;
-	int by;               /* bar geometry */
-	int mx, my, mw, mh;   /* screen size */
-	int wx, wy, ww, wh;   /* window area  */
-	int gappih;           /* horizontal gap between windows */
-	int gappiv;           /* vertical gap between windows */
-	int gappoh;           /* horizontal outer gaps */
-	int gappov;           /* vertical outer gaps */
-	unsigned int seltags;
-	unsigned int sellt;
-	unsigned int tagset[2];
-	int showbar;
-	int topbar;
-	Client *clients;
-	Client *sel;
-	Client *stack;
-	Monitor *next;
-	Window barwin;
-	const Layout *lt[2];
-	Pertag *pertag;
-};
 
 typedef struct {
 	const char *class;
@@ -344,7 +319,10 @@ static void setmfact(const Arg *arg);
 static void setup(void);
 static int stackpos(const Arg *arg);
 static void seturgent(Client *c, int urg);
+static void shiftview(const Arg *arg);
+static void shifttag(const Arg *arg);
 static void showhide(Client *c);
+static void showtagpreview(int tag);
 static void sigchld(int unused);
 #ifdef NOSIGNAL
 #else
@@ -352,6 +330,7 @@ static void sigstatusbar(const Arg *arg);
 #endif
 static void spawn(const Arg *arg);
 static pid_t spawncmd(const Arg *arg);
+static void switchtag(void);
 static Monitor *systraytomon(Monitor *m);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
@@ -366,6 +345,7 @@ static void unmanage(Client *c, int destroyed);
 static void unmapnotify(XEvent *e);
 static void updatebarpos(Monitor *m);
 static void updatebars(void);
+static void updatepreview(void);
 static void updateclientlist(void);
 static int updategeom(void);
 static void updatenumlockmask(void);
@@ -460,6 +440,38 @@ static Colormap cmap;
 #include "vanitygaps.h"
 /* configuration, allows nested code to access above variables */
 #include "config.h"
+
+typedef struct Pertag Pertag;
+struct Monitor {
+	char ltsymbol[16];
+	float mfact;
+	int nmaster;
+	int num;
+	int by;               /* bar geometry */
+	int mx, my, mw, mh;   /* screen size */
+	int wx, wy, ww, wh;   /* window area  */
+	int gappih;           /* horizontal gap between windows */
+	int gappiv;           /* vertical gap between windows */
+	int gappoh;           /* horizontal outer gaps */
+	int gappov;           /* vertical outer gaps */
+	unsigned int seltags;
+	unsigned int sellt;
+	unsigned int tagset[2];
+	int showbar;
+	int topbar;
+	Client *clients;
+	Client *sel;
+	Client *stack;
+	Monitor *next;
+	Window barwin;
+    Window tagwin;
+    Pixmap tagmap[LENGTH(tags)];
+    int previewshow;
+    const Layout *lt[2];
+	Pertag *pertag;
+};
+
+#include "shiftview.c"
 
 struct Pertag {
 	unsigned int curtag, prevtag; /* current and previous tag */
@@ -616,7 +628,9 @@ arrange(Monitor *m)
 void
 arrangemon(Monitor *m)
 {
-	strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, sizeof m->ltsymbol);
+    updatebarpos(m);
+    updatesystray();
+    XMoveWindow(dpy, m->tagwin, m->wx + m->gappov, m->by + (m->topbar ? (bh + m->gappoh) : (- (m->mh / scalepreview) - m->gappoh)));	strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, sizeof m->ltsymbol);
 	if (m->lt[m->sellt]->arrange)
 		m->lt[m->sellt]->arrange(m);
 }
@@ -672,7 +686,11 @@ buttonpress(XEvent *e)
 		selmon = m;
 		focus(NULL);
 	}
-	if (ev->window == selmon->barwin) {
+    if (ev->window == selmon->barwin) {
+    	if (selmon->previewshow) {
+		XUnmapWindow(dpy, selmon->tagwin);
+			selmon->previewshow = 0;
+        }
 		i = x = 0;
 		for (c = m->clients; c; c = c->next)
 			occ |= c->tags == 255 ? 0 : c->tags;
@@ -785,6 +803,7 @@ void
 cleanupmon(Monitor *mon)
 {
 	Monitor *m;
+    size_t i;
 
 	if (mon == mons)
 		mons = mons->next;
@@ -792,9 +811,15 @@ cleanupmon(Monitor *mon)
 		for (m = mons; m && m->next != mon; m = m->next);
 		m->next = mon->next;
 	}
+  for (i = 0; i < LENGTH(tags); i++) {
+       if (mon->tagmap[i])
+	         XFreePixmap(dpy, mon->tagmap[i]);
+}
 	XUnmapWindow(dpy, mon->barwin);
 	XDestroyWindow(dpy, mon->barwin);
-	free(mon);
+    XUnmapWindow(dpy, mon->tagwin);
+    XDestroyWindow(dpy, mon->tagwin);
+    free(mon);
 }
 
 void
@@ -1063,7 +1088,10 @@ createmon(void)
 	m->gappov = gappov;
 	m->lt[0] = &layouts[0];
 	m->lt[1] = &layouts[1 % LENGTH(layouts)];
-	strncpy(m->ltsymbol, layouts[0].symbol, sizeof m->ltsymbol);
+    for (i = 0; i < LENGTH(tags); i++)
+	  m->tagmap[i] = 0;
+    m->previewshow = 0;
+    strncpy(m->ltsymbol, layouts[0].symbol, sizeof m->ltsymbol);
 	m->pertag = ecalloc(1, sizeof(Pertag));
 	m->pertag->curtag = m->pertag->prevtag = 1;
 
@@ -1288,13 +1316,8 @@ dragmfact(const Arg *arg)
 
 	m = selmon;
 
-	#if VANITYGAPS_PATCH
 	int oh, ov, ih, iv;
 	getgaps(m, &oh, &ov, &ih, &iv, &n);
-	#else
-	Client *c;
-	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
-	#endif // VANITYGAPS_PATCH
 
 	ax = m->wx;
 	ay = m->wy;
@@ -1303,125 +1326,45 @@ dragmfact(const Arg *arg)
 
 	if (!n)
 		return;
-	#if FLEXTILE_DELUXE_LAYOUT
-	else if (m->lt[m->sellt]->arrange == &flextile) {
-		int layout = m->ltaxis[LAYOUT];
-		if (layout < 0) {
-			mirror = 1;
-			layout *= -1;
-		}
-		if (layout > FLOATING_MASTER) {
-			layout -= FLOATING_MASTER;
-			fixed = 1;
-		}
-
-		if (layout == SPLIT_HORIZONTAL || layout == SPLIT_HORIZONTAL_DUAL_STACK)
-			horizontal = 1;
-		else if (layout == SPLIT_CENTERED_VERTICAL && (fixed || n - m->nmaster > 1))
-			center = 1;
-		else if (layout == FLOATING_MASTER) {
-			center = 1;
-			if (aw < ah)
-				horizontal = 1;
-		}
-		else if (layout == SPLIT_CENTERED_HORIZONTAL) {
-			if (fixed || n - m->nmaster > 1)
-				center = 1;
-			horizontal = 1;
-		}
-	}
-	#endif // FLEXTILE_DELUXE_LAYOUT
-	#if CENTEREDMASTER_LAYOUT
 	else if (m->lt[m->sellt]->arrange == &centeredmaster && (fixed || n - m->nmaster > 1))
 		center = 1;
-	#endif // CENTEREDMASTER_LAYOUT
-	#if CENTEREDFLOATINGMASTER_LAYOUT
 	else if (m->lt[m->sellt]->arrange == &centeredfloatingmaster)
 		center = 1;
-	#endif // CENTEREDFLOATINGMASTER_LAYOUT
-	#if BSTACK_LAYOUT
 	else if (m->lt[m->sellt]->arrange == &bstack)
 		horizontal = 1;
-	#endif // BSTACK_LAYOUT
-	#if BSTACKHORIZ_LAYOUT
-	else if (m->lt[m->sellt]->arrange == &bstackhoriz)
-		horizontal = 1;
-	#endif // BSTACKHORIZ_LAYOUT
 
 	/* do not allow mfact to be modified under certain conditions */
 	if (!m->lt[m->sellt]->arrange                            // floating layout
 		|| (!fixed && m->nmaster && n <= m->nmaster)         // no master
-		#if MONOCLE_LAYOUT
 		|| m->lt[m->sellt]->arrange == &monocle
-		#endif // MONOCLE_LAYOUT
-		#if GRIDMODE_LAYOUT
-		|| m->lt[m->sellt]->arrange == &grid
-		#endif // GRIDMODE_LAYOUT
-		#if HORIZGRID_LAYOUT
-		|| m->lt[m->sellt]->arrange == &horizgrid
-		#endif // HORIZGRID_LAYOUT
-		#if GAPPLESSGRID_LAYOUT
 		|| m->lt[m->sellt]->arrange == &gaplessgrid
-		#endif // GAPPLESSGRID_LAYOUT
-		#if NROWGRID_LAYOUT
-		|| m->lt[m->sellt]->arrange == &nrowgrid
-		#endif // NROWGRID_LAYOUT
-		#if FLEXTILE_DELUXE_LAYOUT
-		|| (m->lt[m->sellt]->arrange == &flextile && m->ltaxis[LAYOUT] == NO_SPLIT)
-		#endif // FLEXTILE_DELUXE_LAYOUT
 	)
 		return;
 
-	#if VANITYGAPS_PATCH
 	ay += oh;
 	ax += ov;
 	aw -= 2*ov;
 	ah -= 2*oh;
-	#endif // VANITYGAPS_PATCH
 
 	if (center) {
 		if (horizontal) {
 			px = ax + aw / 2;
-			#if VANITYGAPS_PATCH
 			py = ay + ah / 2 + (ah - 2*ih) * (m->mfact / 2.0) + ih / 2;
-			#else
-			py = ay + ah / 2 + ah * m->mfact / 2.0;
-			#endif // VANITYGAPS_PATCH
 		} else { // vertical split
-			#if VANITYGAPS_PATCH
 			px = ax + aw / 2 + (aw - 2*iv) * m->mfact / 2.0 + iv / 2;
-			#else
-			px = ax + aw / 2 + aw * m->mfact / 2.0;
-			#endif // VANITYGAPS_PATCH
 			py = ay + ah / 2;
 		}
 	} else if (horizontal) {
 		px = ax + aw / 2;
 		if (mirror)
-			#if VANITYGAPS_PATCH
 			py = ay + (ah - ih) * (1.0 - m->mfact) + ih / 2;
-			#else
-			py = ay + (ah * (1.0 - m->mfact));
-			#endif // VANITYGAPS_PATCH
 		else
-			#if VANITYGAPS_PATCH
 			py = ay + ((ah - ih) * m->mfact) + ih / 2;
-			#else
-			py = ay + (ah * m->mfact);
-			#endif // VANITYGAPS_PATCH
 	} else { // vertical split
 		if (mirror)
-			#if VANITYGAPS_PATCH
 			px = ax + (aw - iv) * (1.0 - m->mfact) + iv / 2;
-			#else
-			px = ax + (aw * m->mfact);
-			#endif // VANITYGAPS_PATCH
 		else
-			#if VANITYGAPS_PATCH
 			px = ax + ((aw - iv) * m->mfact) + iv / 2;
-			#else
-			px = ax + (aw * m->mfact);
-			#endif // VANITYGAPS_PATCH
 		py = ay + ah / 2;
 	}
 
@@ -1447,7 +1390,6 @@ dragmfact(const Arg *arg)
 			}
 			lasttime = ev.xmotion.time;
 
-			#if VANITYGAPS_PATCH
 			if (center)
 				if (horizontal)
 					if (py - ay > ah / 2)
@@ -1464,24 +1406,6 @@ dragmfact(const Arg *arg)
 					fact = (double) (py - ay - ih / 2) / (double) (ah - ih);
 				else
 					fact = (double) (px - ax - iv / 2) / (double) (aw - iv);
-			#else
-			if (center)
-				if (horizontal)
-					if (py - ay > ah / 2)
-						fact = (double) 1.0 - (ay + ah - py) * 2 / (double) ah;
-					else
-						fact = (double) 1.0 - (py - ay) * 2 / (double) ah;
-				else
-					if (px - ax > aw / 2)
-						fact = (double) 1.0 - (ax + aw - px) * 2 / (double) aw;
-					else
-						fact = (double) 1.0 - (px - ax) * 2 / (double) aw;
-			else
-				if (horizontal)
-					fact = (double) (py - ay) / (double) ah;
-				else
-					fact = (double) (px - ax) / (double) aw;
-			#endif // VANITYGAPS_PATCH
 
 			if (!center && mirror)
 				fact = 1.0 - fact;
@@ -2103,12 +2027,12 @@ manage(Window w, XWindowAttributes *wa)
 	updatewindowtype(c);
 	updatesizehints(c);
 	updatewmhints(c);
+    c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
+    c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
 	c->sfx = c->x;
 	c->sfy = c->y;
 	c->sfw = c->w;
 	c->sfh = c->h;
-    c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
-    c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
 	XSelectInput(dpy, w, EnterWindowMask|FocusChangeMask|PropertyChangeMask|StructureNotifyMask);
 	grabbuttons(c, 0);
 	if (!c->isfloating)
@@ -2196,9 +2120,32 @@ monocle(Monitor *m)
 void
 motionnotify(XEvent *e)
 {
+    unsigned int i, x;
 	static Monitor *mon = NULL;
 	Monitor *m;
 	XMotionEvent *ev = &e->xmotion;
+
+  if (ev->window == selmon->barwin) {
+		i = x = 0;
+		do
+			x += TEXTW(tags[i]);
+		while (ev->x >= x && ++i < LENGTH(tags));
+		if (i < LENGTH(tags)) {
+                  if ((i + 1) != selmon->previewshow && !(selmon->tagset[selmon->seltags] & 1 << i)) {
+				selmon->previewshow = i + 1;
+				showtagpreview(i);
+                  } else if (selmon->tagset[selmon->seltags] & 1 << i) {
+				selmon->previewshow = 0;
+				showtagpreview(0);
+		  }
+		} else if (selmon->previewshow != 0) {
+			selmon->previewshow = 0;
+			showtagpreview(0);
+		}
+	} else if (selmon->previewshow != 0) {
+		selmon->previewshow = 0;
+		showtagpreview(0);
+   }
 
 	if (ev->window != root)
 		return;
@@ -3259,6 +3206,7 @@ setup(void)
 	updatebars();
 	updatestatus();
 	updatebarpos(selmon);
+    updatepreview();
 	/* supporting window for NetWMCheck */
 	wmcheckwin = XCreateSimpleWindow(dpy, root, 0, 0, 1, 1, 0, 0, 0);
 	XChangeProperty(dpy, wmcheckwin, netatom[NetWMCheck], XA_WINDOW, 32,
@@ -3312,6 +3260,23 @@ showhide(Client *c)
 		showhide(c->snext);
 		XMoveWindow(dpy, c->win, WIDTH(c) * -2, c->y);
 	}
+}
+
+void
+showtagpreview(int tag)
+{
+	if (!selmon->previewshow) {
+		XUnmapWindow(dpy, selmon->tagwin);
+		return;
+	}
+
+        if (selmon->tagmap[tag]) {
+		XSetWindowBackgroundPixmap(dpy, selmon->tagwin, selmon->tagmap[tag]);
+		XCopyArea(dpy, selmon->tagmap[tag], selmon->tagwin, drw->gc, 0, 0, selmon->mw / scalepreview, selmon->mh / scalepreview, 0, 0);
+		XSync(dpy, False);
+		XMapWindow(dpy, selmon->tagwin);
+	} else
+		XUnmapWindow(dpy, selmon->tagwin);
 }
 
 void
@@ -3370,6 +3335,36 @@ spawncmd(const Arg *arg)
 		fprintf(stderr, "dwm: execvp %s", ((char **)arg->v)[0]);
 		perror(" failed");
 		exit(EXIT_SUCCESS);
+	}
+}
+
+void switchtag(void) {
+  	int i;
+	unsigned int occ = 0;
+	Client *c;
+        Imlib_Image image;
+
+	for (c = selmon->clients; c; c = c->next)
+		occ |= c->tags;
+	for (i = 0; i < LENGTH(tags); i++) {
+		if (selmon->tagset[selmon->seltags] & 1 << i) {
+                  	if (selmon->tagmap[i] != 0) {
+ 				XFreePixmap(dpy, selmon->tagmap[i]);
+ 				selmon->tagmap[i] = 0;
+ 			}
+			if (occ & 1 << i) {
+                          	image = imlib_create_image(sw, sh);
+				imlib_context_set_image(image);
+				imlib_context_set_display(dpy);
+				imlib_context_set_visual(visual);
+				imlib_context_set_drawable(RootWindow(dpy, screen));
+				imlib_copy_drawable_to_image(0, selmon->mx, selmon->my, selmon->mw ,selmon->mh, 0, 0, 1);
+                                selmon->tagmap[i] = XCreatePixmap(dpy, selmon->tagwin, selmon->mw / scalepreview, selmon->mh / scalepreview, depth);
+				imlib_context_set_drawable(selmon->tagmap[i]);
+				imlib_render_image_part_on_drawable_at_size(0, 0, selmon->mw, selmon->mh, 0, 0, selmon->mw / scalepreview, selmon->mh / scalepreview);
+				imlib_free_image();
+			}                         
+		}
 	}
 }
 
@@ -3570,6 +3565,7 @@ toggleview(const Arg *arg)
 	int i;
 
 	if (newtagset) {
+        switchtag();
 		selmon->tagset[selmon->seltags] = newtagset;
 
 		if (newtagset == ~0) {
@@ -3680,7 +3676,7 @@ updatebars(void)
 		.background_pixel = 0,
 		.border_pixel = 0,
 		.colormap = cmap,
-		.event_mask = ButtonPressMask|ExposureMask
+		.event_mask = ButtonPressMask|ExposureMask|PointerMotionMask
 	};
 	XClassHint ch = {"dwm", "dwm"};
 	for (m = mons; m; m = m->next) {
@@ -3690,13 +3686,35 @@ updatebars(void)
 		if (showsystray && m == systraytomon(m))
 			w -= getsystraywidth();
 		m->barwin = XCreateWindow(dpy, root, m->wx + sp, m->by + vp, w - 2 * sp, bh, 0, depth,
- 		                          InputOutput, visual,
- 		                          CWOverrideRedirect|CWBackPixel|CWBorderPixel|CWColormap|CWEventMask, &wa);
+		                          InputOutput, visual,
+		                          CWOverrideRedirect|CWBackPixel|CWBorderPixel|CWColormap|CWEventMask, &wa);
 		XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
 		if (showsystray && m == systraytomon(m))
 			XMapRaised(dpy, systray->win);
 		XMapRaised(dpy, m->barwin);
 		XSetClassHint(dpy, m->barwin, &ch);
+	}
+}
+
+void
+updatepreview(void)
+{
+	Monitor *m;
+
+	XSetWindowAttributes wa = {
+		.override_redirect = True,
+		.background_pixel = 0,
+		.border_pixel = 0,
+		.colormap = cmap,
+		.event_mask = ButtonPressMask|ExposureMask
+	};
+	for (m = mons; m; m = m->next) {
+		m->tagwin = XCreateWindow(dpy, root, m->wx, m->by + bh, m->mw / 4, m->mh / 4, 0, depth,
+				                  InputOutput, visual,
+		                          CWOverrideRedirect|CWBackPixel|CWBorderPixel|CWColormap|CWEventMask, &wa);
+		XDefineCursor(dpy, m->tagwin, cursor[CurNormal]->cursor);
+		XMapRaised(dpy, m->tagwin);
+		XUnmapWindow(dpy, m->tagwin);
 	}
 }
 
@@ -4174,7 +4192,8 @@ view(const Arg *arg)
 
 	if ((arg->ui & TAGMASK) == selmon->tagset[selmon->seltags])
 		return;
-	selmon->seltags ^= 1; /* toggle sel tagset */
+    switchtag();
+    selmon->seltags ^= 1; /* toggle sel tagset */
 	if (arg->ui & TAGMASK) {
 		selmon->tagset[selmon->seltags] = arg->ui & TAGMASK;
 		selmon->pertag->prevtag = selmon->pertag->curtag;
