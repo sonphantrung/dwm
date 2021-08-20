@@ -2,8 +2,8 @@
 #include <X11/XF86keysym.h>
 
 /* appearance */
-static const unsigned int borderpx  = 1;        /* border pixel of windows */
-static const unsigned int snap      = 32;       /* snap pixel */
+static unsigned int borderpx  = 1;        /* border pixel of windows */
+static unsigned int snap      = 32;       /* snap pixel */
 static const int swallowfloating    = 0;        /* 1 means swallow floating windows by default */
 static const unsigned int gappih    = 10;       /* horiz inner gap between windows */
 static const unsigned int gappiv    = 10;       /* vert inner gap between windows */
@@ -16,8 +16,8 @@ static const unsigned int systrayspacing = 2;   /* systray spacing */
 static const int scalepreview       = 4;
 static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
 static const int showsystray        = 1;     /* 0 means no systray */
-static const int showbar            = 1;        /* 0 means no bar */
-static const int topbar             = 1;        /* 0 means bottom bar */
+static int showbar            = 1;        /* 0 means no bar */
+static int topbar             = 1;        /* 0 means bottom bar */
 static const char slopspawnstyle[]  = "-t 0 -c 0.92,0.85,0.69,0.3 -o"; /* do NOT define -f (format) here */
 static const char slopresizestyle[] = "-t 0 -c 0.92,0.85,0.69,0.3"; /* do NOT define -f (format) here */
 static const int riodraw_borders    = 0;        /* 0 or 1, indicates whether the area drawn using slop includes the window borders */
@@ -35,25 +35,27 @@ static int floatposgrid_y           = 0;        /* float grid rows */
  *    5 - client is moved to current tag
  *    6 - client receives focus only if current tag is shown
  */
-static const int defnetactiverule   = 1;
-static const int vertpad            = 10;       /* vertical padding of bar */
-static const int sidepad            = 10;       /* horizontal padding of bar */
-static const int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
-static const char *fonts[]          = { "monospace:size=12", "Hack Nerd Font:size:8:antialias=true:autohint=true", "Noto Color Emoji:size:8:antialias=true:autohint=true"};
-static const char dmenufont[]       = "monospace:size=10";
-static const char col_gray1[]       = "#282a2e";
-static const char col_gray2[]       = "#822a2a";
-static const char col_gray3[]       = "#d0ddd4";
-static const char col_gray4[]       = "#d7dcd9";
-static const char col_cyan[]        = "#8abeb7";
+static int defnetactiverule   = 1;
+static int vertpad            = 10;       /* vertical padding of bar */
+static int sidepad            = 10;       /* horizontal padding of bar */
+static int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
+static char font[]            = "monospace:size=10";
+static const char *fonts[]          = { font, "Hack Nerd Font:size:8:antialias=true:autohint=true", "Noto Color Emoji:size:8:antialias=true:autohint=true"};
+static char dmenufont[]       = "monospace:size=10";
+static char normbgcolor[]       = "#282a2e";
+static char normbordercolor[]       = "#282a2e";
+static char selbordercolor[]       = "#822a2a";
+static char normfgcolor[]       = "#d0ddd4";
+static char selfgcolor[]       = "#d7dcd9";
+static char selbgcolor[]        = "#8abeb7";
 static const unsigned int baralpha = 0xd0;
 static const unsigned int borderalpha = OPAQUE;
-static const char *colors[][3]      = {
+static char *colors[][3]      = {
 	/*               fg         bg         border   */
-	[SchemeNorm] = { col_gray3, col_gray1, col_gray1 },
-	[SchemeSel]  = { col_cyan, col_gray1,  col_gray2  },
+	[SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
+	[SchemeSel]  = { selbgcolor, normbgcolor,  selbordercolor  },
 };
-static const unsigned int alphas[][3]      = {
+static unsigned int alphas[][3]      = {
 	/*               fg      bg        border     */
 	[SchemeNorm] = { OPAQUE, baralpha, borderalpha },
 	[SchemeSel]  = { OPAQUE, baralpha, borderalpha },
@@ -80,14 +82,14 @@ static const Rule rules[] = {
 	RULE(.wintype = WTYPE "SPLASH", .isfloating = 1)
 	RULE(.title = "Event Tester", .noswallow = 1)
 	RULE(.title = "scratchpad", .tags = SCRATCHPAD_MASK, .isfloating = 1)
-	RULE(.class = "st", .isterminal = 1)
+	RULE(.class = "St", .isterminal = 1)
 	RULE(.class = "Gimp", .tags = 1 << 4)
 	RULE(.class = "Firefox", .tags = 1 << 7)
  };
 /* layout(s) */
-static const float mfact     = 0.50; /* factor of master area size [0.05..0.95] */
-static const int nmaster     = 1;    /* number of clients in master area */
-static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
+static float mfact     = 0.50; /* factor of master area size [0.05..0.95] */
+static int nmaster     = 1;    /* number of clients in master area */
+static int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
 #define NOSIGNAL 1
@@ -131,9 +133,30 @@ static const Layout layouts[] = {
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, "-l", "20", "-p", "Run:", "-vrtf", "-c", "-bw", "2", NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbordercolor, "-sf", selfgcolor, "-l", "20", "-p", "Run:", "-vrtf", "-c", "-bw", "2", NULL };
 static const char *termcmd[]  = { "st", NULL };
 static const char *scratchpadcmd[] = {"st", "-t", "scratchpad", NULL}; 
+
+/*
+ * Xresources preferences to load at startup
+ */
+ResourcePref resources[] = {
+		{ "font",               STRING,  &font },
+		{ "dmenufont",          STRING,  &dmenufont },
+		{ "color0",		STRING,	&normbordercolor },
+		{ "color8",		STRING,	&selbordercolor },
+		{ "color0",		STRING,	&normbgcolor },
+		{ "color4",		STRING,	&normfgcolor },
+		{ "color0",		STRING,	&selfgcolor },
+		{ "color4",		STRING,	&selbgcolor },
+		{ "borderpx",          	INTEGER, &borderpx },
+		{ "snap",          		INTEGER, &snap },
+		{ "showbar",          	INTEGER, &showbar },
+		{ "topbar",          	INTEGER, &topbar },
+		{ "nmaster",          	INTEGER, &nmaster },
+		{ "resizehints",       	INTEGER, &resizehints },
+		{ "mfact",      	 	FLOAT,   &mfact },
+};
 
 #ifdef NOSIGNAL
 /* commands spawned when clicking statusbar, the mouse button pressed is exported as BUTTON */
@@ -155,9 +178,9 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,			XK_l,		spawn,		SHCMD("st -e lf-ueberzug") },
 	{ MODKEY|ShiftMask|ControlMask,		XK_w,		spawn,		SHCMD("wallsetter") },
 	{ MODKEY|ShiftMask,		XK_h,		spawn,		SHCMD("st -e htop") },
-	{ MODKEY|ShiftMask,		XK_c,		spawn,		SHCMD("clipmenu && herbe 'Copied'") },
+	{ MODKEY|ShiftMask,		XK_c,		spawn,		SHCMD("clipmenu && notify-send 'Copied'") },
 	{ Mod1Mask|ShiftMask,		XK_c,		spawn,		SHCMD("sysact") },
-	{ 0, XK_Print,	spawn,		SHCMD("maim ~/shots/screen-$(date +%Y.%m.%d-%H.%M.%S).png && herbe 'Screenshot taken'") },
+	{ 0, XK_Print,	spawn,		SHCMD("maim ~/shots/screen-$(date +%Y.%m.%d-%H.%M.%S).png && notify-send 'Screenshot taken'") },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	STACKKEYS(MODKEY,                          focus)
 	STACKKEYS(MODKEY|ShiftMask,                push)
