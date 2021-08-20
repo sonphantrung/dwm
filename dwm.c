@@ -4040,7 +4040,10 @@ void
 updatesystrayicongeom(Client *i, int w, int h)
 {
 	if (i) {
-		i->h = bh;
+        if (bh >= 30)
+		    i->h = bh - 2; /* Fixing the icon disappearing when setting the bar height */
+        else
+            i->h = bh;
 		if (w == h)
 			i->w = bh;
 		else if (h == bh)
@@ -4054,7 +4057,10 @@ updatesystrayicongeom(Client *i, int w, int h)
 				i->w = bh;
 			else
 				i->w = (int) ((float)bh * ((float)i->w / (float)i->h));
-			i->h = bh;
+        if (bh >= 30)
+		    i->h = bh - 2; /* Fixing the icon disappearing when setting the bar height */
+        else
+            i->h = bh;
 		}
 	}
 }
