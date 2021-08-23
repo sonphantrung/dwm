@@ -50,7 +50,42 @@ static char selfgcolor[]       = "#d7dcd9";
 static char selbgcolor[]        = "#8abeb7";
 static const unsigned int baralpha = 0xd0;
 static const unsigned int borderalpha = OPAQUE;
-static char *colors[][3]      = {
+
+static char termcol0[] = "#080808"; /* black   */
+static char termcol1[] = "#c13434"; /* red     */
+static char termcol2[] = "#646a2f"; /* green   */
+static char termcol3[] = "#c97941"; /* yellow  */
+static char termcol4[] = "#495c6d"; /* blue    */
+static char termcol5[] = "#6d4f77"; /* magenta */
+static char termcol6[] = "#5e8d87"; /* cyan    */
+static char termcol7[] = "#d7dcd9"; /* white   */
+static char termcol8[]  = "#060606"; /* black   */
+static char termcol9[]  = "#c13939"; /* red     */
+static char termcol10[] = "#73813a"; /* green   */
+static char termcol11[] = "#c28a59"; /* yellow  */
+static char termcol12[] = "#6892b6"; /* blue    */
+static char termcol13[] = "#b062c7"; /* magenta */
+static char termcol14[] = "#8abeb7"; /* cyan    */
+static char termcol15[] = "#dae1ea"; /* white   */
+static char *termcolor[] = {
+  termcol0,
+  termcol1,
+  termcol2,
+  termcol3,
+  termcol4,
+  termcol5,
+  termcol6,
+  termcol7,
+  termcol8,
+  termcol9,
+  termcol10,
+  termcol11,
+  termcol12,
+  termcol13,
+  termcol14,
+  termcol15,
+
+};static char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
 	[SchemeSel]  = { selbgcolor, normbgcolor,  selbordercolor  },
@@ -149,6 +184,22 @@ ResourcePref resources[] = {
 		{ "color4",		STRING,	&normfgcolor },
 		{ "color0",		STRING,	&selfgcolor },
 		{ "color4",		STRING,	&selbgcolor },
+		{ "color0",		STRING,	&termcol0 },
+		{ "color1",		STRING,	&termcol1 },
+		{ "color2",		STRING,	&termcol2 },
+		{ "color3",		STRING,	&termcol3 },
+		{ "color4",		STRING,	&termcol4 },
+		{ "color5",		STRING,	&termcol5 },
+		{ "color6",		STRING,	&termcol6 },
+		{ "color7",		STRING,	&termcol7 },
+		{ "color8",		STRING,	&termcol8 },
+		{ "color9",		STRING,	&termcol9 },
+		{ "color10",		STRING,	&termcol10 },
+		{ "color11",		STRING,	&termcol11 },
+		{ "color12",		STRING,	&termcol12 },
+		{ "color13",		STRING,	&termcol13 },
+		{ "color14",		STRING,	&termcol14 },
+		{ "color15",		STRING,	&termcol15 },
 		{ "borderpx",          	INTEGER, &borderpx },
 		{ "snap",          		INTEGER, &snap },
 		{ "showbar",          	INTEGER, &showbar },
