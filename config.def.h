@@ -97,7 +97,7 @@ static unsigned int alphas[][3]      = {
 };
  
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
 static const unsigned int ulinepad	= 5;	/* horizontal padding between the underline and tag */
 static const unsigned int ulinestroke	= 2;	/* thickness / height of the underline */
@@ -168,7 +168,7 @@ static const Layout layouts[] = {
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbordercolor, "-sf", selfgcolor, "-l", "20", "-p", "Run:", "-vrtf", "-c", "-bw", "2", NULL };
+static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbgcolor, "-sf", selfgcolor, "-l", "20", "-p", "Run:", "-vrtf", "-c", "-bw", "2", NULL };
 static const char *termcmd[]  = { "st", NULL };
 static const char *scratchpadcmd[] = {"st", "-t", "scratchpad", NULL}; 
 
