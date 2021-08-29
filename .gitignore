@@ -3,3 +3,4 @@
 *.rej
 config.h
 dwm
+.ccls-cache/
