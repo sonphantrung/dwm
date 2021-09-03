@@ -24,8 +24,8 @@ static const int riodraw_borders    = 0;        /* 0 or 1, indicates whether the
 static const int riodraw_matchpid   = 1;        /* 0 or 1, indicates whether to match the PID of the client that was spawned with riospawn */
 static const int riodraw_spawnasync = 0;        /* 0 means that the application is only spawned after a successful selection while
                                                  * 1 means that the application is being initialised in the background while the selection is made */
-static int floatposgrid_x           = 0;        /* float grid columns */
-static int floatposgrid_y           = 0;        /* float grid rows */
+static int floatposgrid_x           = 5;        /* float grid columns */
+static int floatposgrid_y           = 5;        /* float grid rows */
 /* Default action to take when we receive a net active signal.
  *    0 - disable / does nothing
  *    1 - focus the client (as per the focusonnetactive patch)
@@ -183,7 +183,7 @@ ResourcePref resources[] = {
 		{ "background",		STRING,	&normbgcolor },
 		{ "foreground",		STRING,	&normfgcolor },
 		{ "background",		STRING,	&selfgcolor },
-		{ "foreground",		STRING,	&selbgcolor },
+		{ "color4",		STRING,	&selbgcolor },
 		{ "color0",		STRING,	&termcol0 },
 		{ "color1",		STRING,	&termcol1 },
 		{ "color2",		STRING,	&termcol2 },
