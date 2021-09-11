@@ -53,9 +53,6 @@
 #include "drw.h"
 #include "util.h"
 
-/* Definitions */
-#define NOSIGNAL 1
-
 /* macros */
 #define BUTTONMASK              (ButtonPressMask|ButtonReleaseMask)
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
@@ -210,13 +207,6 @@ typedef struct {
 #define TERMINAL
 #define SWITCHTAG
 
-#ifdef NOSIGNAL
-typedef struct {
-	const char *cmd;
-	int id;
-} StatusCmd;
-#endif
-
 typedef struct Systray   Systray;
 struct Systray {
 	Window win;
@@ -274,10 +264,7 @@ static Atom getatomprop(Client *c, Atom prop);
 static void getfloatpos(int pos, char pCh, int size, char sCh, int min_p, int max_s, int cp, int cs, int cbw, int defgrid, int *out_p, int *out_s);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
-#ifdef NOSIGNAL
-#else
 static pid_t getstatusbarpid();
-#endif
 static unsigned int getsystraywidth();
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void grabbuttons(Client *c, int focused);
@@ -343,10 +330,7 @@ static void shifttag(const Arg *arg);
 static void showhide(Client *c);
 static void showtagpreview(int tag);
 static void sigchld(int unused);
-#ifdef NOSIGNAL
-#else
 static void sigstatusbar(const Arg *arg);
-#endif
 static void spawn(const Arg *arg);
 static pid_t spawncmd(const Arg *arg);
 static void switchtag(void);
@@ -404,15 +388,9 @@ static const char broken[] = "broken";
 static const char dwmdir[] = "dwm";
 static const char localshare[] = ".local/share";
 static char stext[1024];
-#ifdef NOSIGNAL
-static int statusw;
-static int statuscmdn;
-static char lastbutton[] = "-";
-#else
 static int statussig;
 static int statusw;
 static pid_t statuspid = -1;
-#endif
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh, blw = 0;      /* bar geometry */
@@ -732,12 +710,7 @@ buttonpress(XEvent *e)
 			x = selmon->ww - statusw;
 			click = ClkStatusText;
 			char *text, *s, ch;
-		#ifdef NOSIGNAL
-			*lastbutton = '0' + ev->button;
-			statuscmdn = 0;
-		#else
 			statussig = 0;
-		#endif
 			for (text = s = stext; *s && x <= ev->x; s++) {
 				if ((unsigned char)(*s) < ' ') {
 					ch = *s;
@@ -747,14 +720,8 @@ buttonpress(XEvent *e)
 					text = s + 1;
 					if (x >= ev->x)
 						break;
-				#ifdef NOSIGNAL
-					statuscmdn = ch;
-				#else
 					statussig = ch;
-				#endif
 				} else if (*s == '^') {
-				#ifdef NOSIGNAL
-				#else
 					*s = '\0';
 					x += TEXTW(text) - lrpad;
 					*s = '^';
@@ -763,7 +730,6 @@ buttonpress(XEvent *e)
 					while (*(s++) != '^');
 					text = s;
 					s--;
-				#endif
 				}
 			}
 		}
@@ -1723,8 +1689,6 @@ getatomprop(Client *c, Atom prop)
 	}
 	return atom;
 }
-#ifdef NOSIGNAL
-#else
 pid_t
 getstatusbarpid()
 {
@@ -1748,7 +1712,6 @@ getstatusbarpid()
 	pclose(fp);
 	return strtoul(buf, NULL, 10);
 }
-#endif
 
 void
 getfloatpos(int pos, char pCh, int size, char sCh, int min_p, int max_s, int cp, int cs, int cbw, int defgrid, int *out_p, int *out_s)
@@ -3357,8 +3320,6 @@ sigchld(int unused)
 	while (0 < waitpid(-1, NULL, WNOHANG));
 }
 
-#ifdef NOSIGNAL
-#else
 void
 sigstatusbar(const Arg *arg)
 {
@@ -3372,7 +3333,6 @@ sigstatusbar(const Arg *arg)
 
 	sigqueue(statuspid, SIGRTMIN+statussig, sv);
 }
-#endif
 
 void
 spawn(const Arg *arg)
@@ -3387,18 +3347,8 @@ spawncmd(const Arg *arg)
 	if (arg->v == dmenucmd)
 		dmenumon[0] = '0' + selmon->num;
 	if ((pid = fork()) == 0) {
-		if (dpy)
+		if (dpy){
 			close(ConnectionNumber(dpy));
-		if (arg->v == statuscmd) {
-			for (int i = 0; i < LENGTH(statuscmds); i++) {
-				if (statuscmdn == statuscmds[i].id) {
-					statuscmd[2] = statuscmds[i].cmd;
-					setenv("BUTTON", lastbutton, 1);
-					break;
-				}
-			}
-			if (!statuscmd[2])
-				exit(EXIT_SUCCESS);
 		}
 		setsid();
 		execvp(((char **)arg->v)[0], (char **)arg->v);
@@ -3406,6 +3356,7 @@ spawncmd(const Arg *arg)
 		perror(" failed");
 		exit(EXIT_SUCCESS);
 	}
+	return pid;
 }
 
 void switchtag(void) {
@@ -4078,24 +4029,6 @@ updatestatus(void)
 {
 	if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext))) {
 		strcpy(stext, "dwm-"VERSION);
-    #ifdef NOSIGNAL
-        statusw = TEXTW(stext) - lrpad + 2;
-    #endif
-	} else {
-#ifdef NOSIGNAL
-		char *text, *s, ch;
-		statusw = 0;
-		for (text = s = stext; *s; s++) {
-			if ((unsigned char)(*s) < ' ') {
-				ch = *s;
-				*s = '\0';
-				statusw += TEXTW(text) - lrpad;
-				*s = ch;
-				text = s + 1;
-			}
-		}
-		statusw += TEXTW(text) - lrpad + 2;
-#endif
 	}
 	drawbar(selmon);
 	updatesystray();
