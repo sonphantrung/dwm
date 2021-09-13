@@ -3,6 +3,8 @@
 
 /* appearance */
 static unsigned int borderpx  = 1;        /* border pixel of windows */
+#define ICONSIZE 16   /* icon size */
+#define ICONSPACING 5 /* space between icon and title */
 static unsigned int snap      = 32;       /* snap pixel */
 static int swallowfloating    = 0;        /* 1 means swallow floating windows by default */
 static unsigned int gappih    = 10;       /* horiz inner gap between windows */
@@ -36,8 +38,8 @@ static int floatposgrid_y           = 5;        /* float grid rows */
  *    6 - client receives focus only if current tag is shown
  */
 static int defnetactiverule   = 1;
-static int vertpad            = 10;       /* vertical padding of bar */
-static int sidepad            = 10;       /* horizontal padding of bar */
+static int vertpad            = 0;       /* vertical padding of bar */
+static int sidepad            = 0;       /* horizontal padding of bar */
 static int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static char font[]            = "monospace:size=10";
 static const char *fonts[]          = { font, "Hack Nerd Font:size:8:antialias=true:autohint=true", "Noto Color Emoji:size:8:antialias=true:autohint=true"};
