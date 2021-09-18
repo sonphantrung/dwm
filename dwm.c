@@ -2158,8 +2158,8 @@ manage(Window w, XWindowAttributes *wa)
 	updatewindowtype(c);
 	updatesizehints(c);
 	updatewmhints(c);
-	c->sfx = c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2; ;
-	c->sfy = c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;;
+	c->sfx = c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
+	c->sfy = c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
 	c->sfw = c->w;
 	c->sfh = c->h;
 	XSelectInput(dpy, w, EnterWindowMask|FocusChangeMask|PropertyChangeMask|StructureNotifyMask);
@@ -2175,10 +2175,9 @@ manage(Window w, XWindowAttributes *wa)
 		focusclient = (term == selmon->sel);
 	} else {
 		attachBelow(c);
-
-		if (focusclient || !c->mon->sel || !c->mon->stack)
+		if (focusclient || !c->mon->sel || !c->mon->stack){
 			attachstack(c);
-		else {
+		} else {
 			c->snext = c->mon->sel->snext;
 			c->mon->sel->snext = c;
 		}
@@ -2195,6 +2194,18 @@ manage(Window w, XWindowAttributes *wa)
 		}
 		c->mon->sel = c;
 	}
+
+	if (!c->swallowing) {
+		if (riopid && (!riodraw_matchpid || isdescprocess(riopid, c->pid))) {
+			if (riodimensions[3] != -1)
+				rioposition(c, riodimensions[0], riodimensions[1], riodimensions[2], riodimensions[3]);
+			else {
+				killclient(&((Arg) { .v = c }));
+				return;
+			}
+		}
+	}
+
 	arrange(c->mon);
 	XMapWindow(dpy, c->win);
 	if (focusclient)
@@ -3670,17 +3681,6 @@ togglefloating(const Arg *arg)
 		c->sfy = c->y;
 		c->sfw = c->w;
 		c->sfh = c->h;
-	}
-
-	if (!c->swallowing) {
-		if (riopid && (!riodraw_matchpid || isdescprocess(riopid, c->pid))) {
-			if (riodimensions[3] != -1)
-				rioposition(c, riodimensions[0], riodimensions[1], riodimensions[2], riodimensions[3]);
-			else {
-				killclient(&((Arg) { .v = c }));
-				return;
-			}
-		}
 	}
 
 	arrange(c->mon);
