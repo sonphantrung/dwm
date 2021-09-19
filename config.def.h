@@ -41,9 +41,8 @@ static int defnetactiverule   = 1;
 static int vertpad            = 0;       /* vertical padding of bar */
 static int sidepad            = 0;       /* horizontal padding of bar */
 static int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
-static char font[]            = "monospace:size=10";
-static const char *fonts[]          = { font, "Hack Nerd Font:size:8:antialias=true:autohint=true", "Noto Color Emoji:size:8:antialias=true:autohint=true"};
-static char dmenufont[]       = "monospace:size=10";
+static char font[]            = "monospace:pixelsize=12";
+static const char *fonts[]          = { font, "Symbols Nerd Font:pixelsize=12:antialias=true:autohint=true", "Noto Color Emoji:pixelsize=12:antialias=true:autohint=true"};
 static char normbgcolor[]       = "#282a2e";
 static char normbordercolor[]       = "#282a2e";
 static char selbordercolor[]       = "#822a2a";
@@ -179,7 +178,6 @@ static const char *scratchpadcmd[] = {"st", "-t", "scratchpad", NULL};
  */
 ResourcePref resources[] = {
 		{ "font",               STRING,  &font },
-		{ "dmenufont",          STRING,  &dmenufont },
 		{ "background",		STRING,	&normbordercolor },
 		{ "color8",		STRING,	&selbordercolor },
 		{ "background",		STRING,	&normbgcolor },
