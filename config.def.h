@@ -41,8 +41,8 @@ static int defnetactiverule   = 1;
 static int vertpad            = 0;       /* vertical padding of bar */
 static int sidepad            = 0;       /* horizontal padding of bar */
 static int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
-static char font[]            = "monospace:pixelsize=12";
-static const char *fonts[]          = { font, "Symbols Nerd Font:pixelsize=12:antialias=true:autohint=true", "Noto Color Emoji:pixelsize=12:antialias=true:autohint=true"};
+static char font[]            = "monospace:pixelsize=14";
+static const char *fonts[]          = { font, "Symbols Nerd Font:pixelsize=14:antialias=true:autohint=true", "Noto Color Emoji:pixelsize=14:antialias=true:autohint=true"};
 static char normbgcolor[]       = "#282a2e";
 static char normbordercolor[]       = "#282a2e";
 static char selbordercolor[]       = "#822a2a";
