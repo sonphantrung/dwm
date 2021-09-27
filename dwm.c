@@ -197,6 +197,7 @@ typedef struct {
 	// array in your config needs to be in this
 	// exact order.
 	int netactiverule;
+	int unmanaged;
 } Rule;
 
 #define RULE(...) { .monitor = -1, __VA_ARGS__ },
@@ -345,6 +346,7 @@ static void togglebar(const Arg *arg);
 static void togglefakefullscreen(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglefullscreen(const Arg *arg);
+static void togglenomodbuttons(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
 static void freeicon(Client *c);
@@ -400,6 +402,7 @@ static pid_t statuspid = -1;
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh, blw = 0;      /* bar geometry */
+static int unmanaged = 0;    /* whether the window manager should manage the new window or not */
 static int lrpad;            /* sum of left and right padding for text */
 static int vp;               /* vertical padding for bar */
 static int sp;               /* side padding for bar */
@@ -531,6 +534,7 @@ applyrules(Client *c)
 			c->noswallow  = r->noswallow;
 			c->isfloating = r->isfloating;
 			c->tags |= r->tags;
+			unmanaged = r->unmanaged;
 			for (m = mons; m && m->num != r->monitor; m = m->next);
 			if (m)
 				c->mon = m;
@@ -2024,7 +2028,8 @@ grabbuttons(Client *c, int focused)
 			XGrabButton(dpy, AnyButton, AnyModifier, c->win, False,
 				BUTTONMASK, GrabModeSync, GrabModeSync, None, None);
 		for (i = 0; i < LENGTH(buttons); i++)
-			if (buttons[i].click == ClkClientWin)
+			if (buttons[i].click == ClkClientWin
+					&& (nomodbuttons || buttons[i].mask != 0))
 				for (j = 0; j < LENGTH(modifiers); j++)
 					XGrabButton(dpy, buttons[i].button,
 						buttons[i].mask | modifiers[j],
@@ -2132,6 +2137,17 @@ manage(Window w, XWindowAttributes *wa)
 		c->mon = selmon;
 		applyrules(c);
 		term = termforwin(c);
+	}
+
+	if (unmanaged) {
+		XMapWindow(dpy, c->win);
+		if (unmanaged == 1)
+			XRaiseWindow(dpy, c->win);
+		else if (unmanaged == 2)
+			XLowerWindow(dpy, c->win);
+		free(c);
+		unmanaged = 0;
+		return;
 	}
 
 	if (c->x + WIDTH(c) > c->mon->mx + c->mon->mw)
@@ -3690,6 +3706,14 @@ togglefullscreen(const Arg *arg)
 		setfullscreen(c, 1);
 	} else
 		setfullscreen(c, !c->isfullscreen);
+}
+
+void
+togglenomodbuttons(const Arg *arg)
+{
+	nomodbuttons = !nomodbuttons;
+	if (selmon->sel)
+		grabbuttons(selmon->sel, 1);
 }
 
 void

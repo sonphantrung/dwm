@@ -43,6 +43,7 @@ static int sidepad            = 0;       /* horizontal padding of bar */
 static int user_bh            = 30;        /* 0 means that dwm will calculate bar height, >= 1 means dwm will user_bh as bar height */
 static char font[]            = "monospace:pixelsize=14";
 static const char *fonts[]          = { font, "Symbols Nerd Font:pixelsize=14:antialias=true:autohint=true", "Noto Color Emoji:pixelsize=14:antialias=true:autohint=true"};
+static int nomodbuttons                  = 0;   /* allow client mouse button bindings that have no modifier */
 static char normbgcolor[]       = "#282a2e";
 static char normbordercolor[]       = "#282a2e";
 static char selbordercolor[]       = "#822a2a";
@@ -119,6 +120,7 @@ static const Rule rules[] = {
 	RULE(.wintype = WTYPE "SPLASH", .isfloating = 1)
 	RULE(.title = "Event Tester", .noswallow = 1)
 	RULE(.title = "scratchpad", .tags = SCRATCHPAD_MASK, .isfloating = 1)
+	RULE(.class = "eww", .unmanaged = 2)
 	RULE(.class = "St", .isterminal = 1)
 	RULE(.class = "Gimp", .tags = 1 << 4)
 	RULE(.class = "Firefox", .tags = 1 << 7)
@@ -314,6 +316,7 @@ static Key keys[] = {
 	{ Mod4Mask|Mod1Mask,            XK_m,      floatpos,       {.v = "-1p  1p" } }, // ↙
 	{ Mod4Mask|Mod1Mask,            XK_comma,  floatpos,       {.v = " 0p  1p" } }, // ↓
 	{ Mod4Mask|Mod1Mask,            XK_period, floatpos,       {.v = " 1p  1p" } }, // ↘
+	{ MODKEY|ShiftMask,             XK_Escape,     togglenomodbuttons,     {0} },
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
@@ -354,6 +357,9 @@ static Button buttons[] = {
 	{ ClkClientWin,         MODKEY,         Button1,        moveorplace,    {.i = 1} },
 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },
+	{ ClkClientWin,         0,         Button1,        moveorplace,    {.i = 1} },
+	{ ClkClientWin,         0,         Button2,        togglefloating, {0} },
+	{ ClkClientWin,         0,         Button3,        resizemouse,    {0} },
 	{ ClkClientWin,         MODKEY|ShiftMask, Button3,      dragcfact,      {0} },
 	{ ClkClientWin,         MODKEY|ShiftMask, Button1,      dragmfact,      {0} },
 	{ ClkTagBar,            0,              Button1,        view,           {0} },
