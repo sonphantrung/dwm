@@ -362,7 +362,7 @@ static int updategeom(void);
 static void updatenumlockmask(void);
 static void updatesizehints(Client *c);
 static void updatestatus(void);
-static void updatesystray(void);
+static void updatesystray(int updatebar);
 static void updatesystrayicongeom(Client *i, int w, int h);
 static void updatesystrayiconstate(Client *i, XPropertyEvent *ev);
 static void updatetitle(Client *c);
@@ -639,7 +639,7 @@ void
 arrangemon(Monitor *m)
 {
     updatebarpos(m);
-    updatesystray();
+    updatesystray(1);
     XMoveWindow(dpy, m->tagwin, m->wx + m->gappov, m->by + (m->topbar ? (bh + m->gappoh) : (- (m->mh / scalepreview) - m->gappoh)));
     strncpy(m->ltsymbol, m->lt[m->sellt]->symbol, sizeof m->ltsymbol);
 	if (m->lt[m->sellt]->arrange)
@@ -840,7 +840,6 @@ clientmessage(XEvent *e)
 				free(c);
 				return;
 			}
-
 			/* Clear status bar to avoid artifacts beneath systray icons */
 			drw_rect(drw, 0, 0, selmon->ww, bh, 1, 1);
 			drw_map(drw, selmon->barwin, 0, 0, selmon->ww, bh);
@@ -877,7 +876,7 @@ clientmessage(XEvent *e)
 			sendevent(c->win, netatom[Xembed], StructureNotifyMask, CurrentTime, XEMBED_MODALITY_ON, 0 , systray->win, XEMBED_EMBEDDED_VERSION);
 			XSync(dpy, False);
 			resizebarwin(selmon);
-			updatesystray();
+			updatesystray(1);
 			setclientstate(c, NormalState);
 		}
 		return;
@@ -1144,7 +1143,7 @@ destroynotify(XEvent *e)
 	else if ((c = wintosystrayicon(ev->window))) {
 		removesystrayicon(c);
 		resizebarwin(selmon);
-		updatesystray();
+		updatesystray(1);
 	}
 }
 
@@ -1608,6 +1607,9 @@ drawbars(void)
 
 	for (m = mons; m; m = m->next)
 		drawbar(m);
+
+	if (showsystray && !systraypinning)
+		updatesystray(0);
 }
 
 void
@@ -1637,8 +1639,8 @@ expose(XEvent *e)
 
 	if (ev->count == 0 && (m = wintomon(ev->window))) {
 		drawbar(m);
-		if (m == selmon)
-			updatesystray();
+		if (showsystray && m == systraytomon(m))
+			updatesystray(0);
 	}
 }
 
@@ -2239,7 +2241,7 @@ maprequest(XEvent *e)
 	if ((i = wintosystrayicon(ev->window))) {
 		sendevent(i->win, netatom[Xembed], StructureNotifyMask, CurrentTime, XEMBED_WINDOW_ACTIVATE, 0, systray->win, XEMBED_EMBEDDED_VERSION);
 		resizebarwin(selmon);
-		updatesystray();
+		updatesystray(1);
 	}
 
 	if (!XGetWindowAttributes(dpy, ev->window, &wa))
@@ -2578,7 +2580,7 @@ propertynotify(XEvent *e)
 		else
 			updatesystrayiconstate(c, ev);
 		resizebarwin(selmon);
-		updatesystray();
+		updatesystray(1);
 	}
 	if ((ev->window == root) && (ev->atom == XA_WM_NAME))
 		updatestatus();
@@ -2811,7 +2813,7 @@ resizerequest(XEvent *e)
 	if ((i = wintosystrayicon(ev->window))) {
 		updatesystrayicongeom(i, ev->width, ev->height);
 		resizebarwin(selmon);
-		updatesystray();
+		updatesystray(1);
 	}
 }
 
@@ -3382,7 +3384,8 @@ setup(void)
 	for (i = 0; i < LENGTH(colors); i++)
 		scheme[i] = drw_scm_create(drw, colors[i], alphas[i], 3);
 	/* init system tray */
-	updatesystray();
+	if (showsystray)
+		updatesystray(0);
 	/* init bars */
 	updatebars();
 	updatestatus();
@@ -3852,7 +3855,7 @@ unmapnotify(XEvent *e)
 		/* KLUDGE! sometimes icons occasionally unmap their windows, but do
 		 * _not_ destroy them. We map those windows back */
 		XMapRaised(dpy, c->win);
-		updatesystray();
+		updatesystray(1);
 	}
 }
 
@@ -4205,7 +4208,8 @@ updatestatus(void)
 		strcpy(stext, "dwm-"VERSION);
 	}
 	drawbar(selmon);
-	updatesystray();
+	if (showsystray)
+		updatesystray(1);
 }
 
 void
@@ -4266,7 +4270,7 @@ updatesystrayiconstate(Client *i, XPropertyEvent *ev)
 }
 
 void
-updatesystray(void)
+updatesystray(int updatebar)
 {
 	XSetWindowAttributes wa;
 	XWindowChanges wc;
@@ -4334,7 +4338,9 @@ updatesystray(void)
 	XMapWindow(dpy, systray->win);
 	XMapSubwindows(dpy, systray->win);
 	XSync(dpy, False);
-    drawbar(m);
+
+	if (updatebar)
+		drawbar(m);
 }
 
 void
