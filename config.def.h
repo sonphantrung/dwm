@@ -260,7 +260,7 @@ static Key keys[] = {
 	{ MODKEY|Mod1Mask|ShiftMask,    XK_9,      incrovgaps,     {.i = -1 } }, */
 	{ MODKEY|Mod1Mask,              XK_0,      togglegaps,     {0} },
 	{ MODKEY|Mod1Mask|ShiftMask,    XK_0,      defaultgaps,    {0} },
-	{ MODKEY,                       XK_Tab,    view,           {0} },
+	{ Mod1Mask,                       XK_Tab,    view,           {0} },
 	{ MODKEY,             XK_q,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
 	{ MODKEY,                       XK_e,      setlayout,      {.v = &layouts[9]} },
@@ -330,6 +330,7 @@ static Key keys[] = {
 	{ MODKEY,			XK_Page_Down,	shiftview,	{ .i = +1 } },
 	{ MODKEY|ShiftMask,		XK_Page_Down,	shifttag,	{ .i = +1 } },
 	{ MODKEY|ShiftMask,             XK_BackSpace, quit,        {0} },
+	{ MODKEY|ControlMask|ShiftMask, XK_q,      quit,           {1} }, 
 	{ MODKEY,                       XK_minus, scratchpad_show, {0} },
 	{ MODKEY|ShiftMask,             XK_minus, scratchpad_hide, {0} },
 	{ MODKEY,                       XK_equal,scratchpad_remove,{0} },
