@@ -206,6 +206,8 @@ ResourcePref resources[] = {
 		{ "floatposgrid_x",     INTEGER, &floatposgrid_x },
 		{ "floatposgrid_y",     INTEGER, &floatposgrid_y },
 		{ "borderpx",          	INTEGER, &borderpx },
+		{ "vertpad",          		INTEGER, &vertpad },
+		{ "sidepad",          		INTEGER, &sidepad },
 		{ "snap",          		INTEGER, &snap },
 		{ "showbar",          	INTEGER, &showbar },
 		{ "gappih",        		INTEGER, &gappih },
