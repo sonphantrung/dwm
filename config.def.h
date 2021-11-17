@@ -120,6 +120,7 @@ static const Rule rules[] = {
 	RULE(.wintype = WTYPE "SPLASH", .isfloating = 1)
 	RULE(.title = "Event Tester", .noswallow = 1)
 	RULE(.title = "scratchpad", .tags = SCRATCHPAD_MASK, .isfloating = 1)
+	RULE(.class = "zoom", .isfloating = 1)
 	RULE(.class = "eww", .unmanaged = 2)
 	RULE(.class = "St", .isterminal = 1)
 	RULE(.class = "Gimp", .tags = 1 << 4)

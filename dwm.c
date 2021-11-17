@@ -3561,8 +3561,11 @@ void switchtag(void) {
  			}
 			if (occ & 1 << i) {
                           	image = imlib_create_image(sw, sh);
+
 				imlib_context_set_image(image);
 				imlib_context_set_display(dpy);
+				imlib_image_set_has_alpha(1);
+				imlib_context_set_blend(0);
 				imlib_context_set_visual(visual);
 				imlib_context_set_drawable(RootWindow(dpy, screen));
 				imlib_copy_drawable_to_image(0, selmon->mx, selmon->my, selmon->mw ,selmon->mh, 0, 0, 1);
