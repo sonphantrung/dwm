@@ -1520,6 +1520,9 @@ drawbar(Monitor *m)
 	unsigned int i, occ = 0, urg = 0, n = 0;
 	Client *c;
 
+	if (!m->showbar)
+		return;
+
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
 		tw = statusw = m->ww - drawstatusbar(m, bh, stext);
