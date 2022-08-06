@@ -3337,8 +3337,6 @@ setup(void)
 	Atom utf8string;
 
 	/* clean up any zombies immediately */
-	if (signal(SIGCHLD, sigchld) == SIG_ERR)
-		die("can't install SIGCHLD handler:");
 	sigchld(0);
 
 	signal(SIGHUP, sighup);
@@ -3495,6 +3493,8 @@ showtagpreview(int tag)
 void
 sigchld(int unused)
 {
+	if (signal(SIGCHLD, sigchld) == SIG_ERR)
+		die("can't install SIGCHLD handler:");
 	while (0 < waitpid(-1, NULL, WNOHANG));
 }
 
@@ -3544,9 +3544,7 @@ spawncmd(const Arg *arg)
 		}
 		setsid();
 		execvp(((char **)arg->v)[0], (char **)arg->v);
-		fprintf(stderr, "dwm: execvp %s", ((char **)arg->v)[0]);
-		perror(" failed");
-		exit(EXIT_SUCCESS);
+		die("dwm: execvp '%s' failed:", ((char **)arg->v)[0]);
 	}
 	return pid;
 }
@@ -3859,6 +3857,7 @@ unmanage(Client *c, int destroyed)
 		wc.border_width = c->oldbw;
 		XGrabServer(dpy); /* avoid race conditions */
 		XSetErrorHandler(xerrordummy);
+		XSelectInput(dpy, c->win, NoEventMask);
 		XConfigureWindow(dpy, c->win, CWBorderWidth, &wc); /* restore border */
 		XUngrabButton(dpy, AnyButton, AnyModifier, c->win);
 		setclientstate(c, WithdrawnState);
