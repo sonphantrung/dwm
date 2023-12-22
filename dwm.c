@@ -336,9 +336,6 @@ static void shiftview(const Arg *arg);
 static void shifttag(const Arg *arg);
 static void showhide(Client *c);
 static void showtagpreview(int tag);
-static void sigchld(int unused);
-static void sighup(int unused);
-static void sigterm(int unused);
 static void sigstatusbar(const Arg *arg);
 static void spawn(const Arg *arg);
 static pid_t spawncmd(const Arg *arg);
@@ -405,7 +402,7 @@ static int statusw;
 static pid_t statuspid = -1;
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
-static int bh, blw = 0;      /* bar geometry */
+static int bh = 0;      /* bar geometry */
 static int unmanaged = 0;    /* whether the window manager should manage the new window or not */
 static int lrpad;            /* sum of left and right padding for text */
 static int vp;               /* vertical padding for bar */
@@ -721,7 +718,7 @@ buttonpress(XEvent *e)
 		if (i < LENGTH(tags)) {
 			click = ClkTagBar;
 			arg.ui = 1 << i;
-		} else if (ev->x < x + blw)
+		} else if (ev->x < x + TEXTW(selmon->ltsymbol))
 			click = ClkLtSymbol;
 		else if (ev->x > selmon->ww - statusw){
 			x = selmon->ww - statusw;
@@ -1552,7 +1549,7 @@ drawbar(Monitor *m)
 			drw_rect(drw, x + ulinepad, bh - ulinestroke - ulinevoffset, w - (ulinepad * 2), ulinestroke, 1, 0);
 		x += w;
 	}
-	w = blw = TEXTW(m->ltsymbol);
+	w = TEXTW(m->ltsymbol);
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
@@ -2009,13 +2006,11 @@ gettextprop(Window w, Atom atom, char *text, unsigned int size)
 	text[0] = '\0';
 	if (!XGetTextProperty(dpy, w, &name, atom) || !name.nitems)
 		return 0;
-	if (name.encoding == XA_STRING)
+	if (name.encoding == XA_STRING) {
 		strncpy(text, (char *)name.value, size - 1);
-	else {
-		if (XmbTextPropertyToTextList(dpy, &name, &list, &n) >= Success && n > 0 && *list) {
-			strncpy(text, *list, size - 1);
-			XFreeStringList(list);
-		}
+	} else if (XmbTextPropertyToTextList(dpy, &name, &list, &n) >= Success && n > 0 && *list) {
+		strncpy(text, *list, size - 1);
+		XFreeStringList(list);
 	}
 	text[size - 1] = '\0';
 	XFree(name.value);
@@ -2049,16 +2044,26 @@ grabkeys(void)
 {
 	updatenumlockmask();
 	{
-		unsigned int i, j;
+		unsigned int i, j, k;
 		unsigned int modifiers[] = { 0, LockMask, numlockmask, numlockmask|LockMask };
-		KeyCode code;
+		int start, end, skip;
+		KeySym *syms;
 
 		XUngrabKey(dpy, AnyKey, AnyModifier, root);
-		for (i = 0; i < LENGTH(keys); i++)
-			if ((code = XKeysymToKeycode(dpy, keys[i].keysym)))
-				for (j = 0; j < LENGTH(modifiers); j++)
-					XGrabKey(dpy, code, keys[i].mod | modifiers[j], root,
-						True, GrabModeAsync, GrabModeAsync);
+		XDisplayKeycodes(dpy, &start, &end);
+		syms = XGetKeyboardMapping(dpy, start, end - start + 1, &skip);
+		if (!syms)
+			return;
+		for (k = start; k <= end; k++)
+			for (i = 0; i < LENGTH(keys); i++)
+				/* skip modifier codes, we do that ourselves */
+				if (keys[i].keysym == syms[(k - start) * skip])
+					for (j = 0; j < LENGTH(modifiers); j++)
+						XGrabKey(dpy, k,
+							 keys[i].mod | modifiers[j],
+							 root, True,
+							 GrabModeAsync, GrabModeAsync);
+		XFree(syms);
 	}
 }
 
@@ -2165,14 +2170,13 @@ manage(Window w, XWindowAttributes *wa)
 		return;
 	}
 
-	if (c->x + WIDTH(c) > c->mon->mx + c->mon->mw)
-		c->x = c->mon->mx + c->mon->mw - WIDTH(c);
-	if (c->y + HEIGHT(c) > c->mon->my + c->mon->mh)
-		c->y = c->mon->my + c->mon->mh - HEIGHT(c);
-	c->x = MAX(c->x, c->mon->mx);
+	if (c->x + WIDTH(c) > c->mon->wx + c->mon->ww)
+		c->x = c->mon->wx + c->mon->ww - WIDTH(c);
+	if (c->y + HEIGHT(c) > c->mon->my + c->mon->wh)
+		c->y = c->mon->wy + c->mon->wh - HEIGHT(c);
+	c->x = MAX(c->x, c->mon->wx);
 	/* only fix client y-offset, if the client center might cover the bar */
-	c->y = MAX(c->y, ((c->mon->by == c->mon->my) && (c->x + (c->w / 2) >= c->mon->wx)
-		&& (c->x + (c->w / 2) < c->mon->wx + c->mon->ww)) ? bh : c->mon->my);
+	c->y = MAX(c->y, c->mon->wy);
 
 	wc.border_width = c->bw;
 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
@@ -2181,8 +2185,8 @@ manage(Window w, XWindowAttributes *wa)
 	updatewindowtype(c);
 	updatesizehints(c);
 	updatewmhints(c);
-	c->sfx = c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
-	c->sfy = c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
+	c->sfx = c->x = c->mon->wx + (c->mon->ww - WIDTH(c)) / 2;
+	c->sfy = c->y = c->mon->wy + (c->mon->wh - HEIGHT(c)) / 2;
 	c->sfw = c->w;
 	c->sfh = c->h;
 	XSelectInput(dpy, w, EnterWindowMask|FocusChangeMask|PropertyChangeMask|StructureNotifyMask);
@@ -2257,9 +2261,7 @@ maprequest(XEvent *e)
 		updatesystray(1);
 	}
 
-	if (!XGetWindowAttributes(dpy, ev->window, &wa))
-		return;
-	if (wa.override_redirect)
+	if (!XGetWindowAttributes(dpy, ev->window, &wa) || wa.override_redirect)
 		return;
 	if (!wintoclient(ev->window))
 		manage(ev->window, &wa);
@@ -3245,7 +3247,7 @@ setfocus(Client *c)
 		c->oldstate = c->isfloating | (1 << 1);
 		c->bw = 0;
 		c->isfloating = 1;
-		resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
+		resizeclient(c, c->mon->wx, c->mon->wy, c->mon->ww, c->mon->wh);
 		XRaiseWindow(dpy, c->win);
 	} else if (restorestate && (c->oldstate & (1 << 1))) {
 		c->bw = c->oldbw;
@@ -3335,9 +3337,16 @@ setup(void)
 	int i;
 	XSetWindowAttributes wa;
 	Atom utf8string;
+	struct sigaction sa;
 
-	/* clean up any zombies immediately */
-	sigchld(0);
+	/* do not transform children into zombies when they terminate */
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_NOCLDSTOP | SA_NOCLDWAIT | SA_RESTART;
+	sa.sa_handler = SIG_IGN;
+	sigaction(SIGCHLD, &sa, NULL);
+
+	/* clean up any zombies (inherited from .xinitrc etc) immediately */
+	while (waitpid(-1, NULL, WNOHANG) > 0);
 
 	signal(SIGHUP, sighup);
 	signal(SIGTERM, sigterm);
@@ -3441,7 +3450,6 @@ setviewport(void){
 	XChangeProperty(dpy, root, netatom[NetDesktopViewport], XA_CARDINAL, 32, PropModeReplace, (unsigned char *)data, 2);
 }
 
-
 void
 seturgent(Client *c, int urg)
 {
@@ -3491,14 +3499,6 @@ showtagpreview(int tag)
 }
 
 void
-sigchld(int unused)
-{
-	if (signal(SIGCHLD, sigchld) == SIG_ERR)
-		die("can't install SIGCHLD handler:");
-	while (0 < waitpid(-1, NULL, WNOHANG));
-}
-
-void
 sigstatusbar(const Arg *arg)
 {
 	union sigval sv;
@@ -3513,20 +3513,6 @@ sigstatusbar(const Arg *arg)
 }
 
 void
-sighup(int unused)
-{
-	Arg a = {.i = 1};
-	quit(&a);
-}
-
-void
-sigterm(int unused)
-{
-	Arg a = {.i = 0};
-	quit(&a);
-}
-
-void
 spawn(const Arg *arg)
 {
 	spawncmd(arg);
@@ -3536,6 +3522,7 @@ pid_t
 spawncmd(const Arg *arg)
 {
 	pid_t pid;
+
 	if (arg->v == dmenucmd)
 		dmenumon[0] = '0' + selmon->num;
 	if ((pid = fork()) == 0) {
@@ -3543,6 +3530,12 @@ spawncmd(const Arg *arg)
 			close(ConnectionNumber(dpy));
 		}
 		setsid();
+
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+		sa.sa_handler = SIG_DFL;
+		sigaction(SIGCHLD, &sa, NULL);
+
 		execvp(((char **)arg->v)[0], (char **)arg->v);
 		die("dwm: execvp '%s' failed:", ((char **)arg->v)[0]);
 	}
@@ -3659,7 +3652,7 @@ tagmon(const Arg *arg)
 		sendmon(c, dirtomon(arg->i));
 		c->isfullscreen = 1;
 		if (c->fakefullscreen != 1) {
-			resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
+			resizeclient(c, c->mon->wx, c->mon->wy, c->mon->ww, c->mon->wh);
 			XRaiseWindow(dpy, c->win);
 		}
 	} else
