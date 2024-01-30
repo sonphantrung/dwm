@@ -3348,9 +3348,6 @@ setup(void)
 	/* clean up any zombies (inherited from .xinitrc etc) immediately */
 	while (waitpid(-1, NULL, WNOHANG) > 0);
 
-	signal(SIGHUP, sighup);
-	signal(SIGTERM, sigterm);
-
 	/* init screen */
 	screen = DefaultScreen(dpy);
 	sw = DisplayWidth(dpy, screen);
@@ -3521,6 +3518,7 @@ spawn(const Arg *arg)
 pid_t
 spawncmd(const Arg *arg)
 {
+	struct sigaction sa;
 	pid_t pid;
 
 	if (arg->v == dmenucmd)
@@ -4017,7 +4015,7 @@ updategeom(void)
 		for (i = 0, m = mons; i < nn && m; m = m->next, i++) {
 			if (i >= n
 			|| unique[i].x_org != m->mx || unique[i].y_org != m->my
-			|| unique[i].width != m->mw || unique[i].height != m->mh);
+			|| unique[i].width != m->mw || unique[i].height != m->mh)
 			{
 				dirty = 1;
 				m->num = i;
