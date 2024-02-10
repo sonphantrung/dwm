@@ -122,7 +122,7 @@ static const Rule rules[] = {
 	RULE(.title = "scratchpad", .tags = SCRATCHPAD_MASK, .isfloating = 1)
 	RULE(.class = "zoom", .isfloating = 1)
 	RULE(.class = "eww", .unmanaged = 2)
-	RULE(.class = "St", .isterminal = 1)
+	RULE(.class = "st", .isterminal = 1)
 	RULE(.class = "Gimp", .tags = 1 << 4)
 	RULE(.class = "Firefox", .tags = 1 << 7)
  };

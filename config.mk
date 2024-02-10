@@ -18,7 +18,7 @@ XINERAMAFLAGS = -DXINERAMA
 FREETYPELIBS = -lfontconfig -lXft
 FREETYPEINC = /usr/local/include/freetype2
 
-#KVMLIB = -lkvm
+KVMLIB = -lkvm
 
 # This is needed for the swallow patch
 XCBLIBS = -lX11-xcb -lxcb -lxcb-res -lXrender

@@ -3247,7 +3247,7 @@ setfocus(Client *c)
 		c->oldstate = c->isfloating | (1 << 1);
 		c->bw = 0;
 		c->isfloating = 1;
-		resizeclient(c, c->mon->wx, c->mon->wy, c->mon->ww, c->mon->wh);
+		resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
 		XRaiseWindow(dpy, c->win);
 	} else if (restorestate && (c->oldstate & (1 << 1))) {
 		c->bw = c->oldbw;
@@ -3650,7 +3650,7 @@ tagmon(const Arg *arg)
 		sendmon(c, dirtomon(arg->i));
 		c->isfullscreen = 1;
 		if (c->fakefullscreen != 1) {
-			resizeclient(c, c->mon->wx, c->mon->wy, c->mon->ww, c->mon->wh);
+			resizeclient(c, c->mon->mx, c->mon->my, c->mon->mw, c->mon->mh);
 			XRaiseWindow(dpy, c->win);
 		}
 	} else
