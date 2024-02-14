@@ -50,7 +50,7 @@ static char selbordercolor[]       = "#822a2a";
 static char normfgcolor[]       = "#d0ddd4";
 static char selfgcolor[]       = "#d7dcd9";
 static char selbgcolor[]        = "#8abeb7";
-static const unsigned int baralpha = 0xd0;
+static const unsigned int baralpha = 0xFF;
 static const unsigned int borderalpha = OPAQUE;
 
 static char termcol0[] = "#080808"; /* black   */

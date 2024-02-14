@@ -271,8 +271,8 @@ static Picture geticonprop(Window w, unsigned int *icw, unsigned int *ich);
 static void getfloatpos(int pos, char pCh, int size, char sCh, int min_p, int max_s, int cp, int cs, int cbw, int defgrid, int *out_p, int *out_s);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
-static pid_t getstatusbarpid();
-static unsigned int getsystraywidth();
+static pid_t getstatusbarpid(void);
+static unsigned int getsystraywidth(void);
 static int gettextprop(Window w, Atom atom, char *text, unsigned int size);
 static void grabbuttons(Client *c, int focused);
 static void grabkeys(void);
@@ -310,12 +310,12 @@ static void riospawn(const Arg *arg);
 static void run(void);
 static void runautostart(void);
 static void scan(void);
-static void scratchpad_hide ();
-static _Bool scratchpad_last_showed_is_killed (void);
-static void scratchpad_remove ();
-static void scratchpad_show ();
-static void scratchpad_show_client (Client * c);
-static void scratchpad_show_first (void);
+static void scratchpad_hide(const Arg *arg);
+static _Bool scratchpad_last_showed_is_killed(void);
+static void scratchpad_remove(const Arg *arg);
+static void scratchpad_show(const Arg *arg);
+static void scratchpad_show_client(Client * c);
+static void scratchpad_show_first(void);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
 static void sendmon(Client *c, Monitor *m);
 static void setclientstate(Client *c, long state);
@@ -379,7 +379,7 @@ static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void load_xresources(void);
 static void resource_load(XrmDatabase db, char *name, enum resource_type rtype, void *dst);
-static void xinitvisual();
+static void xinitvisual(void);
 
 static int swallow(Client *p, Client *c);
 static void unswallow(Client *c);
@@ -1754,7 +1754,7 @@ getatomprop(Client *c, Atom prop)
 	return atom;
 }
 pid_t
-getstatusbarpid()
+getstatusbarpid(void)
 {
 	char buf[32], *str = buf, *c;
 	FILE *fp;
@@ -1985,7 +1985,7 @@ getstate(Window w)
 }
 
 unsigned int
-getsystraywidth()
+getsystraywidth(void)
 {
 	unsigned int w = 0;
 	Client *i;
@@ -2973,7 +2973,7 @@ scan(void)
 	}
 }
 
-static void scratchpad_hide ()
+static void scratchpad_hide(const Arg *arg)
 {
 	if (selmon -> sel)
 	{
@@ -2984,7 +2984,7 @@ static void scratchpad_hide ()
 	}
 }
 
-static _Bool scratchpad_last_showed_is_killed (void)
+static _Bool scratchpad_last_showed_is_killed(void)
 {
 	_Bool killed = 1;
 	for (Client * c = selmon -> clients; c != NULL; c = c -> next)
@@ -2998,16 +2998,16 @@ static _Bool scratchpad_last_showed_is_killed (void)
 	return killed;
 }
 
-static void scratchpad_remove ()
+static void scratchpad_remove(const Arg *arg)
 {
 	if (selmon -> sel && scratchpad_last_showed != NULL && selmon -> sel == scratchpad_last_showed)
 		scratchpad_last_showed = NULL;
 }
 
-static void scratchpad_show ()
+static void scratchpad_show(const Arg *arg)
 {
 	if (scratchpad_last_showed == NULL || scratchpad_last_showed_is_killed ())
-		scratchpad_show_first ();
+		scratchpad_show_first();
 	else
 	{
 		if (scratchpad_last_showed -> tags != SCRATCHPAD_MASK)
@@ -3035,17 +3035,17 @@ static void scratchpad_show ()
 					if (c -> tags == SCRATCHPAD_MASK)
 					{
 						found_next = 1;
-						scratchpad_show_client (c);
+						scratchpad_show_client(c);
 						break;
 					}
 				}
 			}
-			if (found_next == 0) scratchpad_show_first ();
+			if (found_next == 0) scratchpad_show_first();
 		}
 	}
 }
 
-static void scratchpad_show_client (Client * c)
+static void scratchpad_show_client(Client * c)
 {
 	scratchpad_last_showed = c;
 	c -> tags = selmon->tagset[selmon->seltags];
@@ -3053,7 +3053,7 @@ static void scratchpad_show_client (Client * c)
 	arrange(selmon);
 }
 
-static void scratchpad_show_first (void)
+static void scratchpad_show_first(void)
 {
 	for (Client * c = selmon -> clients; c != NULL; c = c -> next)
 	{
@@ -3960,7 +3960,7 @@ losefullscreen(Client *next)
 }
 
 void
-updateclientlist()
+updateclientlist(void)
 {
 	Client *c;
 	Monitor *m;
@@ -4675,7 +4675,7 @@ systraytomon(Monitor *m) {
 }
 
 void
-xinitvisual()
+xinitvisual(void)
 {
 	XVisualInfo *infos;
 	XRenderPictFormat *fmt;
