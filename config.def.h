@@ -231,12 +231,16 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_grave,  spawn,  {.v = scratchpadcmd } },
 	{ MODKEY|ShiftMask,		XK_w,		spawn,		SHCMD("st -e nmtui; kill -45 $(pidof dwmblocks)") },
 	{ MODKEY|ShiftMask,		XK_p,		spawn,		SHCMD("st -e pulsemixer; kill -44 $(pidof dwmblocks)") },
+	{ 0, XF86XK_AudioMute,		spawn,		SHCMD("mixer vol.mute=^") },
+	{ 0, XF86XK_AudioRaiseVolume,	spawn,		SHCMD("vol i") },
+	{ 0, XF86XK_AudioLowerVolume,	spawn,		SHCMD("vol d") },
 	{ MODKEY|ShiftMask,			XK_l,		spawn,		SHCMD("st -e lf-ueberzug") },
 	{ MODKEY|ShiftMask|ControlMask,		XK_w,		spawn,		SHCMD("wallsetter") },
 	{ MODKEY|ShiftMask,		XK_h,		spawn,		SHCMD("st -e htop") },
 	{ MODKEY|ShiftMask,		XK_c,		spawn,		SHCMD("clipmenu && notify-send 'Copied'") },
+	{ MODKEY|ShiftMask,		XK_s,		spawn,		SHCMD("maim -s -u | xclip -sel c -t image/png && notify-send 'Section copied'")},
 	{ Mod1Mask|ShiftMask,		XK_c,		spawn,		SHCMD("sysact") },
-	{ 0, XK_Print,	spawn,		SHCMD("maim ~/shots/screen-$(date +%Y.%m.%d-%H.%M.%S).png && notify-send 'Screenshot taken'") },
+	{ 0, XK_Print,	spawn,		SHCMD("maim ~/Pictures/shots/screen-$(date +%Y.%m.%d-%H.%M.%S).png && notify-send 'Screenshot taken'") },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	STACKKEYS(MODKEY,                          focus)
 	STACKKEYS(MODKEY|ShiftMask,                push)
