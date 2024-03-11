@@ -1,5 +1,6 @@
 /* See LICENSE file for copyright and license details. */
 #include <X11/XF86keysym.h>
+#define USERXRESOURCESDIR "/home/goobah/.config/X11/.Xresources"
 
 /* appearance */
 static unsigned int borderpx  = 1;        /* border pixel of windows */
@@ -98,6 +99,20 @@ static unsigned int alphas[][3]      = {
 	[SchemeNorm] = { OPAQUE, baralpha, borderalpha },
 	[SchemeSel]  = { OPAQUE, baralpha, borderalpha },
 };
+
+static const char *const autostart[] = {
+	"setwallp", NULL,
+	"xrdb", "-merge", USERXRESOURCESDIR, NULL,
+	"dunst", NULL,
+	"picom", NULL,
+	"musicpd", NULL,
+	"unclutter", NULL,
+	"slstatus", NULL,
+	"xset", "r", "rate", "300", "50", NULL,
+	"clipmenud", NULL,
+	NULL /* terminate */
+};
+
  
 /* tagging */
 static char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
